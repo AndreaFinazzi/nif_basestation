@@ -4,7 +4,7 @@
 #include "std_msgs/msg/u_int8.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include <autoware_auto_msgs/msg/vehicle_state_command.hpp>
-#include <autoware_auto_msgs/msg/joy_stick_enabled.hpp>
+// #include <autoware_auto_msgs/msg/joy_stick_enabled.hpp>
 #include <autoware_auto_msgs/msg/raw_control_command.hpp>
 #include <autoware_auto_msgs/msg/vehicle_control_command.hpp>
 
