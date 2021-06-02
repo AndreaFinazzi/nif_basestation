@@ -1,6 +1,6 @@
 services:
     iac_basestation:
-        image: iac_basestation
+        image: iacteams/basestation
         build:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}

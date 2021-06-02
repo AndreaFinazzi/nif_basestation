@@ -1,11 +1,14 @@
 session_name: iac_basestation_launch
 windows:
   - window_name: Joystick Launch
+    layout: tiled
     panes:
     - shell_command:
       - echo "Sleeping 5 seconds before launching zenoh"
-      - sleep 5
+      - sleep 2
       - bst_fm.sh
+    - shell_command:
+      - joy_pub
     - shell_command:
       - rf_pub
     - shell_command:
@@ -13,19 +16,29 @@ windows:
     - shell_command:
       - ui_pub
   - window_name: Telemetry Printouts
+    layout: tiled
+    panes:
     - shell_command:
+      - sleep 5
       - acc_tel
     - shell_command:
+      - sleep 5
       - brk_tel
     - shell_command:
+      - sleep 5
       - str_tel
     - shell_command:
+      - sleep 5
       - gear_tel
     - shell_command:
+      - sleep 5
       - heartbt_tel
     - shell_command:
+      - sleep 5
       - joystat_tel
     - shell_command:
+      - sleep 5
       - rate_tel
     - shell_command:
+      - sleep 5
       - emer_tel

@@ -9,9 +9,13 @@ Dependencies:
 docker
 docker-compose (pip3 install --upgrade pip setuptools && pip3 install --upgrade docker-compose)
 
+Prelims:
+bastation ip:
+    address: 10.42.0.<70 - 79>
+    netmask: 255.255.255.0
 
-Do Stuff:
-./operations/scripts/bst_docker_build.sh
+Set up Environment:
+./operations/scripts/bst_docker_build.sh or docker pull iacteams/basestation
 ./operations/scripts/bst_docker_up.sh
 ./operations/scripts/bst_docker_join.sh
 
