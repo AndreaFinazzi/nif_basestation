@@ -22,15 +22,13 @@
 #include <autoware_auto_msgs/msg/raw_control_command.hpp>
 #include <autoware_auto_msgs/msg/vehicle_control_command.hpp>
 #include <autoware_auto_msgs/msg/vehicle_state_command.hpp>
-#include <autoware_auto_msgs/msg/joy_stick_enabled.hpp>
+// #include <autoware_auto_msgs/msg/joy_stick_enabled.hpp>
 #include <joystick_vehicle_interface/visibility_control.hpp>
 #include <sensor_msgs/msg/joy.hpp>
 #include "std_msgs/msg/u_int8.hpp"
-#include <common/types.hpp>
+// #include <common/types.hpp>
 
 #include <map>
-
-using autoware::common::types::bool8_t;
 
 namespace joystick_vehicle_interface
 {
@@ -99,7 +97,7 @@ public:
     const AxisScaleMap & axis_offset_map,
     const ButtonMap & button_map);
   /// Compute state command
-  bool8_t update_state_command(const sensor_msgs::msg::Joy & msg);
+  bool update_state_command(const sensor_msgs::msg::Joy & msg);
   /// Compute control command
   template<typename T>
   T compute_command(const sensor_msgs::msg::Joy & msg);
@@ -113,7 +111,7 @@ public:
 
 private:
   /// Given an active button, update the state command
-  JOYSTICK_VEHICLE_INTERFACE_LOCAL bool8_t handle_active_button(Buttons button);
+  JOYSTICK_VEHICLE_INTERFACE_LOCAL bool handle_active_button(Buttons button);
   /// Convert raw axis value with affine transform for type
   template<typename T>
   JOYSTICK_VEHICLE_INTERFACE_LOCAL void axis_value(
@@ -136,11 +134,11 @@ private:
   AxisScaleMap m_axis_scale_map{};
   AxisScaleMap m_axis_offset_map{};
   ButtonMap m_button_map{};
-  bool8_t m_autonomous{false};
-  bool8_t m_wipers_on{false};
-  bool8_t m_headlights_on{false};
-  bool8_t m_hand_brake_on{false};
-  bool8_t m_horn_on{false};
+  bool m_autonomous{false};
+  bool m_wipers_on{false};
+  bool m_headlights_on{false};
+  bool m_hand_brake_on{false};
+  bool m_horn_on{false};
   decltype(HighLevelControl::velocity_mps) m_velocity{};
 
   VehicleStateCommand m_state_command{};

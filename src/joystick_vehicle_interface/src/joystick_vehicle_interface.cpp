@@ -156,7 +156,7 @@ JoystickVehicleInterface::compute_command(const sensor_msgs::msg::Joy & msg)
   return ret;
 }
 
-bool8_t JoystickVehicleInterface::update_state_command(const sensor_msgs::msg::Joy & msg)
+bool JoystickVehicleInterface::update_state_command(const sensor_msgs::msg::Joy & msg)
 {
   auto ret = false;
   // std::cout<<unsigned(gear_val)<<std::endl;
@@ -180,7 +180,7 @@ bool8_t JoystickVehicleInterface::update_state_command(const sensor_msgs::msg::J
   return ret;
 }
 
-bool8_t JoystickVehicleInterface::handle_active_button(Buttons button)
+bool JoystickVehicleInterface::handle_active_button(Buttons button)
 {
   auto ret = true;
   // int flag = 0;

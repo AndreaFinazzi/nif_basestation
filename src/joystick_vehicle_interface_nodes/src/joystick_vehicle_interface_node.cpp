@@ -13,7 +13,6 @@
 // limitations under the License.
 //
 // Co-developed by Tier IV, Inc. and Apex.AI, Inc.
-#include <common/types.hpp>
 #include <joystick_vehicle_interface_nodes/joystick_vehicle_interface_node.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <stdio.h>
@@ -21,9 +20,6 @@
 #include <memory>
 #include <string>
 #include <type_traits>
-
-using autoware::common::types::bool8_t;
-using autoware::common::types::float64_t;
 
 bool flag_allowed = false;
 
@@ -41,7 +37,7 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   const auto control_command_high =
     declare_parameter("control_command_high").get<std::string>();
   const bool recordreplay_command_enabled =
-    declare_parameter("recordreplay_command_enabled").get<bool8_t>();
+    declare_parameter("recordreplay_command_enabled").get<bool>();
 
   // maps
   const auto check_set = [this](auto & map, auto key, const std::string & param_name) {
@@ -50,7 +46,7 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
         using MapT = std::remove_reference_t<decltype(map)>;
         using ValT = typename MapT::mapped_type;
         const auto val_raw =
-          param.get<std::conditional_t<std::is_floating_point<ValT>::value, float64_t, int64_t>>();
+          param.get<std::conditional_t<std::is_floating_point<ValT>::value, double, int64_t>>();
         map[key] = static_cast<ValT>(val_raw);
       }
     };

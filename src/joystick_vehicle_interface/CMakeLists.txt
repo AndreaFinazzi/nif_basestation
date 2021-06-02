@@ -17,7 +17,7 @@ ament_auto_find_build_dependencies()
 ament_auto_add_library(joystick_vehicle_interface SHARED
   src/joystick_vehicle_interface.cpp
   include/joystick_vehicle_interface/joystick_vehicle_interface.hpp)
-autoware_set_compile_options(joystick_vehicle_interface)
+#autoware_set_compile_options(joystick_vehicle_interface)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -27,8 +27,6 @@
 #include <memory>
 #include <string>
 
-using autoware::common::types::bool8_t;
-
 using joystick_vehicle_interface::Axes;
 using joystick_vehicle_interface::Buttons;
 using joystick_vehicle_interface::AxisMap;
@@ -53,7 +51,7 @@ private:
     const std::string & control_command_high,
     const std::string & state_command_topic,
     const std::string & joy_topic,
-    const bool8_t & recordreplay_command_enabled,
+    const bool & recordreplay_command_enabled,
     const AxisMap & axis_map,
     const AxisScaleMap & axis_scale_map,
     const AxisScaleMap & axis_offset_map,

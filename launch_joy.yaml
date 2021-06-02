@@ -1,9 +1,31 @@
-session_name: joystick_launch
+session_name: iac_basestation_launch
 windows:
-  - window_name: Main Launch
+  - window_name: Joystick Launch
     panes:
     - shell_command:
-      - echo 'did you know'
-      - echo 'you can inline'
-    - shell_command: echo 'single commands'
-    - echo 'for panes'
+      - echo "Sleeping 5 seconds before launching zenoh"
+      - sleep 5
+      - bst_fm.sh
+    - shell_command:
+      - rf_pub
+    - shell_command:
+      - int_node
+    - shell_command:
+      - ui_pub
+  - window_name: Telemetry Printouts
+    - shell_command:
+      - acc_tel
+    - shell_command:
+      - brk_tel
+    - shell_command:
+      - str_tel
+    - shell_command:
+      - gear_tel
+    - shell_command:
+      - heartbt_tel
+    - shell_command:
+      - joystat_tel
+    - shell_command:
+      - rate_tel
+    - shell_command:
+      - emer_tel

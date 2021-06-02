@@ -17,7 +17,7 @@ ament_auto_find_build_dependencies()
 set(JOYSTICK_VEHICLE_INTERFACE_LIB_NODE joystick_vehicle_interface_node)
 ament_auto_add_library(${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE}
   SHARED src/joystick_vehicle_interface_node.cpp)
-autoware_set_compile_options(${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE})
+# autoware_set_compile_options(${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE})
 
 # Node executable
 rclcpp_components_register_node(${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE}
