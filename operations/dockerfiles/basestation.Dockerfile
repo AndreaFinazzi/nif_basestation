@@ -44,6 +44,7 @@ RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> ~/.bashrc
 # RUN echo "alias term_tel='terminator -l 111'" >> ~/.bashrc
 # RUN echo "alias term_joy='terminator -l 222'" >> ~/.bashrc
 RUN echo "source /workspace/install/setup.bash" >> ~/.bashrc
+RUN echo "alias e_shutdown='/workspace/install/shutdown.sh" >> ~/.bashrc
 # RUN echo "alias heartbt_tel='ros2 run heartbeat_node heart_exec_TX'" >> ~/.bashrc
 # RUN echo "alias ui_pub='ros2 run userinput ui_publisher'" >> ~/.bashrc
 # RUN echo "alias rf_pub='ros2 run userinput ui_raceflag'" >> ~/.bashrc
