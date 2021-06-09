@@ -26,6 +26,23 @@ class RCFlagInput : public rclcpp::Node
       auto RaceControlFlag = deep_orange_msgs::msg::RcToCt();
       std::cout << "Enter RC flag input [1-4] [1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
       std::cin >> rcflag;
+      std::string confirmation_race_flag = "oogabooga";
+      while (!(confirmation_race_flag.compare("Y")==0 || confirmation_race_flag.compare("n")==0))
+      {
+        if ((!rclcpp::ok()) || confirmation_race_flag.compare("")==0)
+        {
+          return;
+        }
+        std::cout << "You entered race flag " << rcflag << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
+        std::cin >> confirmation_race_flag;
+      }
+      if (confirmation_race_flag.compare("n")==0)
+      {
+        std::cout<<"Roger that, not setting race flag"<<std::endl;
+        return;
+      }
+      
+      
       if(rcflag>4 || rcflag< 1){
         throw std::domain_error{"Invalid Race flag"};
       }
@@ -33,6 +50,21 @@ class RCFlagInput : public rclcpp::Node
 
       std::cout << "Enter vehicle flag: [0 - null, 1 - checkered, 2 - black, 3 - purple ]";
       std::cin >> vehcond;
+      std::string confirmation_vehicle_flag = "oogabooga";
+      while (!(confirmation_vehicle_flag.compare("Y")==0 || confirmation_vehicle_flag.compare("n")==0))
+      {
+        if (!rclcpp::ok() || confirmation_vehicle_flag.compare("")==0)
+        {
+          return;
+        }
+        std::cout << "You entered vehicle flag " << vehcond << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
+        std::cin >> confirmation_vehicle_flag;
+      }
+      if (confirmation_vehicle_flag.compare("n")==0)
+      {
+        std::cout<<"Roger that, not setting vehicle flag"<<std::endl;
+        return;
+      }
       if(vehcond == 1){
         RaceControlFlag.black = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
         RaceControlFlag.checkered = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true};
@@ -54,7 +86,7 @@ class RCFlagInput : public rclcpp::Node
          RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
       }
     
-      RCLCPP_INFO(this->get_logger(), "Publishing: '%u'", vehcond);
+      RCLCPP_INFO(this->get_logger(), "Publishing race flag: '%u', vehicle flag: '%u'", RaceControlFlag.track_cond, vehcond);
       publisher_->publish(RaceControlFlag);
       
     }
