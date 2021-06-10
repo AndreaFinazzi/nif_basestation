@@ -15,13 +15,24 @@ bastation ip:
 -    netmask: 255.255.255.0
 
 Set up Environment:
+
 ```
-./operations/scripts/bst_docker_build.sh or docker pull iacteams/basestation
-./operations/scripts/bst_docker_up.sh
-./operations/scripts/bst_docker_join.sh
+./operations/scripts/bst_docker_build.sh
 ```
 
-after the join you are in docker do:
+or
+
 ```
-tmuxp load launch_joy.yaml
+docker pull iacteams/basestation
+```
+
+Then:
+```
+./operations/scripts/bst_docker_up.sh
+./operations/scripts/launch_basestation.sh
+```
+
+To open a bash shell inside the container:
+```
+./operations/scripts/bst_docker_join.sh
 ```
