@@ -15,6 +15,8 @@ bastation ip:
 -    netmask: 255.255.255.0
 
 Note- Leave Gateway empty
+
+
 Set up Environment:
 
 ```
