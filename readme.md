@@ -14,6 +14,7 @@ bastation ip:
 -    address: 10.42.0.<70 - 79>
 -    netmask: 255.255.255.0
 
+Note- Leave Gateway empty
 Set up Environment:
 
 ```
