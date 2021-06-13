@@ -1,0 +1,64 @@
+session_name: iac_basestation_launch
+windows:
+  - window_name: Joystick Launch
+    layout: tiled
+    panes:
+    - shell_command:
+      - echo "Sleeping 5 seconds before launching zenoh"
+      - sleep 2
+      - bst_fm.sh
+    - shell_command:
+      - ros2 launch joystick_vehicle_interface_nodes joystick_vehicle_interface_node.launch.py
+    - shell_command:
+      - ros2 run intermediate_node intermediate_node
+  - window_name: User Inputs
+    layout: tiled
+    panes:
+    - shell_command:
+      - ros2 run userinput ui_raceflag
+    - shell_command:
+      - ros2 run userinput ui_publisher
+    - shell_command:
+      - remote_spoof_spawn.sh
+  - window_name: Ping and State
+    layout: tiled
+    panes:
+    - shell_command:
+      - echo "PING for 10.42.0.200 (ADLINK)"
+      - ping 10.42.0.200
+    - shell_command:
+      - echo "PING for 10.42.0.254 (SWITCH)"
+      - ping 10.42.0.254
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/misc_report_do deep_orange_msgs/msg/MiscReport
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/ct_report deep_orange_msgs/msg/CtReport
+  - window_name: Telemetry Printouts
+    layout: tiled
+    panes:
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /joystick/accelerator_cmd
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /joystick/brake_cmd
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /joystick/steering_cmd
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /vehicle/state_command
+    - shell_command:
+      - sleep 5
+      - ros2 run heartbeat_node heart_exec_TX
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /vehicle/joy_control_enable
+    - shell_command:
+      - sleep 5
+      - ros2 topic hz /counter
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /vehicle/emergency_stop
