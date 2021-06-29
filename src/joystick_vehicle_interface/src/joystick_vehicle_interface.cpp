@@ -72,7 +72,10 @@ void JoystickVehicleInterface::axis_value_throttle(
   }
   const auto scale_it = m_axis_scale_map.find(axis);
   const auto scale = m_axis_scale_map.end() == scale_it ? DEFAULT_SCALE : scale_it->second;
-  const auto val_raw = msg.axes[axis_idx] * scale;
+  // AUBURN EDIT::TODO
+  const auto altered_controller_output = (msg.axes[axis_idx] - 0.9)*(1/1.9); 
+  const auto val_raw = altered_controller_output * scale; 
+  // ORIGINAL: const auto val_raw = msg.axes[axis_idx] * scale;
   const auto offset_it = m_axis_offset_map.find(axis);
   const auto offset = m_axis_offset_map.end() == offset_it ? DEFAULT_OFFSET : offset_it->second;
   using ValT = std::decay_t<decltype(value)>;
