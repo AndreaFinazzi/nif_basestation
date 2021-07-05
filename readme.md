@@ -7,7 +7,7 @@ Joshua Spisak <jspisak@andrew.cmu.edu>
 
 Dependencies:
 docker
-docker-compose (pip3 install --upgrade pip setuptools && pip3 install --upgrade docker-compose)
+docker-compose (https://docs.docker.com/compose/install/)
 
 Prelims:
 bastation ip:
