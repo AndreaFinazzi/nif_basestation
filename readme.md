@@ -39,3 +39,11 @@ To open a bash shell inside the container:
 ```
 ./operations/scripts/bst_docker_join.sh
 ```
+
+Troubleshoot:
+
+Issue #1 :  docker.errors.DockerException: Error while fetching server API version: ('Connection aborted.', PermissionError(13, 'Permission denied'))
+
+```
+sudo chmod 666 /var/run/docker.sock
+```
