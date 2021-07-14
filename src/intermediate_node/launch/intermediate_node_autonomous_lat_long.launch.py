@@ -8,7 +8,7 @@ def generate_launch_description():
         executable = 'intermediate_node',
         output = 'screen', 
         remappings=[
-            ("/joystick/steering_cmd", "/joystick/steering_cmd_not_used")
+            ("/joystick/steering_cmd", "/joystick/steering_cmd_not_used"),
             ("/joystick/accelerator_cmd", "/joystick/accelerator_cmd_max")
         ]
     )
