@@ -19,9 +19,8 @@
 #include <joystick_vehicle_interface/joystick_vehicle_interface.hpp>
 #include <joystick_vehicle_interface_nodes/visibility_control.hpp>
 #include "std_msgs/msg/u_int8.hpp"
-#include "std_msgs/msg/int8.hpp"
+#include "std_msgs/msg/float32.hpp"
 
-#include <mpark_variant_vendor/variant.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <memory>
@@ -45,45 +44,18 @@ public:
   explicit JoystickVehicleInterfaceNode(const rclcpp::NodeOptions & node_options);
 
 private:
+  // parser of joystick commands
   std::unique_ptr<joystick_vehicle_interface::JoystickVehicleInterface> m_core;
-  JOYSTICK_VEHICLE_INTERFACE_NODES_LOCAL void init(
-    const std::string & control_command,
-    const std::string & control_command_high,
-    const std::string & state_command_topic,
-    const std::string & joy_topic,
-    const bool & recordreplay_command_enabled,
-    const AxisMap & axis_map,
-    const AxisScaleMap & axis_scale_map,
-    const AxisScaleMap & axis_offset_map,
-    const ButtonMap & button_map);
-
   /// Callback for joystick subscription: compute control and state command and publish
   JOYSTICK_VEHICLE_INTERFACE_NODES_LOCAL void on_joy(const sensor_msgs::msg::Joy::SharedPtr msg);
 
-  using HighLevelControl = autoware_auto_msgs::msg::HighLevelControlCommand;
-  using BasicControl = autoware_auto_msgs::msg::VehicleControlCommand;
-  using RawControl = autoware_auto_msgs::msg::RawControlCommand;
-  // using Joyenable = autoware_auto_msgs::msg::JoyStickEnabled;
-  using Int8need = std_msgs::msg::UInt8;
+  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_emergency_stop;
+  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_gear_pub;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_accelerator_pub;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_steering_pub;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_brake_pub;
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr m_joy_sub;
 
-  template<typename T>
-  using PubT = typename rclcpp::Publisher<T>::SharedPtr;
-
-  using ControlPub = mpark::variant<PubT<RawControl>, PubT<BasicControl>, PubT<HighLevelControl>>;
-
-  ControlPub m_cmd_pub{};
-  ControlPub m_cmd_pub_high{};
-  rclcpp::Publisher<autoware_auto_msgs::msg::VehicleStateCommand>::SharedPtr m_state_cmd_pub{};
-  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_recordreplay_cmd_pub{};
-  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr m_joy_sub{nullptr};
-  // rclcpp::Publisher<Joyenable>::SharedPtr m_enable_joy_pub{};
-  rclcpp::Publisher<Int8need>::SharedPtr m_enable_joy_pub{};
-  rclcpp::Publisher<Int8need>::SharedPtr m_enable_joy_control_pub{};
-  rclcpp::Publisher<std_msgs::msg::Int8>::SharedPtr m_shutdown_pub{};
-  // Joyenable variable{};
-  Int8need variable{};
-  Int8need variable_joy_control{};
-  std_msgs::msg::Int8 variable_shutdown{};
 };  // class JoystickVehicleInterfaceNode
 }  // namespace joystick_vehicle_interface_nodes
 
