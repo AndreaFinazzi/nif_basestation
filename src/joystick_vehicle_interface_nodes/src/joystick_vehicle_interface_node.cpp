@@ -84,8 +84,9 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   check_set(button_map, Buttons::RECORDREPLAY_START_REPLAY, "buttons.recordreplay_start_replay");
   check_set(button_map, Buttons::RECORDREPLAY_STOP, "buttons.recordreplay_stop");
 
-  // Emergency stop directly to the vehicle
-  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("emergency_stop", 1);
+  // basic functionality (trigger emergency stop and send heartbeat)
+  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", 1);
+  m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", 1);
   // output vehicle commands
   m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", 1);
   m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
@@ -134,6 +135,11 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   m_core->axis_value_steer(*msg, Axes::FRONT_STEER, data);
   msg_steering.data = data;
   m_steering_pub->publish(msg_steering);
+
+  // publish heartbeat
+  auto msg_heartbeat = std_msgs::msg::UInt8();
+  msg_heartbeat.data = cnt;
+  m_heartbeat->publish(msg_heartbeat);
 }
 
 }  // namespace joystick_vehicle_interface_nodes

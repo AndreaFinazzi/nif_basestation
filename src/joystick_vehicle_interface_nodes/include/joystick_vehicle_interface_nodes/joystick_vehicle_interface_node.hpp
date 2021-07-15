@@ -47,14 +47,19 @@ private:
   // parser of joystick commands
   std::unique_ptr<joystick_vehicle_interface::JoystickVehicleInterface> m_core;
   /// Callback for joystick subscription: compute control and state command and publish
+  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr m_joy_sub;
   JOYSTICK_VEHICLE_INTERFACE_NODES_LOCAL void on_joy(const sensor_msgs::msg::Joy::SharedPtr msg);
 
+  // basic functionality
   rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_emergency_stop;
+  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_heartbeat;
+  unsigned int cnt = 0; 
+
+  // vehicle control
   rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_gear_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_accelerator_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_steering_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_brake_pub;
-  rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr m_joy_sub;
 
 };  // class JoystickVehicleInterfaceNode
 }  // namespace joystick_vehicle_interface_nodes
