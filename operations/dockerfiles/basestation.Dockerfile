@@ -32,6 +32,9 @@ ADD operations/scripts/remote_spoof_kill.sh /usr/local/bin
 RUN apt update \
     && apt install -y ros-foxy-joy* iputils* ros-foxy-autoware-auto-msgs tmux tmuxp nano
 
+# deep orange messages 
+RUN git clone https://gitlab.com/IACBaseSoftware/deep_orange_msgs src/deep_orange_msgs
+
 # Setup Bashrc
 RUN echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc
 RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
