@@ -117,8 +117,6 @@ bool JoystickVehicleInterface::update_state_command(const sensor_msgs::msg::Joy 
 bool JoystickVehicleInterface::handle_active_button(Buttons button)
 {
   auto ret = true;
-  // int flag = 0;
-  using VSC = decltype(m_state_command);
   switch (button) {
     case Buttons::GEAR_REVERSE: 
       if (gear_allowed == true)
