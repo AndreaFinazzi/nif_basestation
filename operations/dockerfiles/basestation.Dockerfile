@@ -17,16 +17,12 @@ RUN apt install -y ros-foxy-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN apt install -y llvm-dev libclang-dev
 RUN git clone https://github.com/eclipse-zenoh/zenoh-plugin-dds
-RUN cd zenoh-plugin-dds && git checkout 2f2b5ef55623f513a5cce04bf2a655f00c32ea8e && /root/.cargo/bin/cargo build --release
-RUN cp zenoh-plugin-dds/target/release/dzd /usr/bin
+RUN cd zenoh-plugin-dds && git checkout master && /root/.cargo/bin/cargo build --release
+RUN cp zenoh-plugin-dds/target/release/zenoh-bridge-dds /usr/bin
 
 # ADD Executables / config
 RUN mkdir /etc/cyclone
 ADD operations/config/cyclonedds.xml /etc/cyclone/cyclonedds.xml
-ADD operations/scripts/adlink_fm.sh /usr/local/bin
-ADD operations/scripts/bst_fm.sh /usr/local/bin
-ADD operations/scripts/remote_spoof_spawn.sh /usr/local/bin
-ADD operations/scripts/remote_spoof_kill.sh /usr/local/bin
 
 #AUTOWARE MSGS
 RUN apt update \
