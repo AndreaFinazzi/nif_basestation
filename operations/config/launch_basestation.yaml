@@ -6,7 +6,7 @@ windows:
     - shell_command:
       - echo "Sleeping 5 seconds before launching zenoh"
       - sleep 2
-      - bst_fm.sh
+      - /workspace/operations/scripts/bst_fm.sh
     - shell_command:
       - ros2 launch joystick_vehicle_interface_nodes joystick_vehicle_interface_node.launch.py
     - shell_command:
@@ -19,7 +19,7 @@ windows:
     - shell_command:
       - ros2 run userinput ui_publisher
     - shell_command:
-      - remote_spoof_spawn.sh
+      - /workspace/operations/scripts/remote_spoof_spawn.sh
   - window_name: Ping and State
     layout: tiled
     panes:
