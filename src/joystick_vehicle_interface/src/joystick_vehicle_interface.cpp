@@ -122,14 +122,14 @@ bool JoystickVehicleInterface::handle_active_button(Buttons button)
     case Buttons::GEAR_REVERSE: 
       if (gear_allowed == true)
       {
-        m_shift_down = true; 
+        m_shift_up = true; 
         gear_allowed = false; 
       }
       break;
     case Buttons::GEAR_DRIVE:
       if (gear_allowed == true)
       {
-        m_shift_up = true; 
+        m_shift_down = true; 
         gear_allowed = false; 
       }
       break;

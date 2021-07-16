@@ -164,7 +164,7 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
       try_shifting = true; 
     }
     // check if downshift was requested and we are not already in first gear
-    else if(m_core->get_shift_down() && desired_gear > 1)
+    else if(m_core->get_shift_down() && desired_gear > 0)
     {
         RCLCPP_INFO(this->get_logger(), "Shift up");
         desired_gear--;
