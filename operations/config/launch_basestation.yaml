@@ -54,3 +54,21 @@ windows:
     - shell_command:
       - sleep 5
       - ros2 topic echo /vehicle/emergency_stop
+  - window_name: Car Diagnostics
+    layout: tiled
+    panes:
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/brake_pressure_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/gear_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/low_voltage_system_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/vehicle_kinematic_state
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/wheel_speed_report
