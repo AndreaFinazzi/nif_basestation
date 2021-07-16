@@ -11,7 +11,7 @@ class RCFlagInput : public rclcpp::Node
     RCFlagInput()
     : Node("rcflag_publisher")
     {
-      publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("rc_flag", 10);
+      publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("/raptor_dbw_interface/rc_to_ct", 10);
       timer_ = this->create_wall_timer(
       500ms, std::bind(&RCFlagInput::timer_callback, this));
     }

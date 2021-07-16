@@ -20,7 +20,7 @@
 #include <joystick_vehicle_interface_nodes/visibility_control.hpp>
 #include "std_msgs/msg/u_int8.hpp"
 #include "std_msgs/msg/float32.hpp"
-#include "raptor_dbw_msgs/msg/gear_report.hpp"
+#include "deep_orange_msgs/msg/pt_report.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -56,6 +56,8 @@ private:
   // basic functionality
   rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_emergency_stop;
   rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_heartbeat;
+  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_joy_enable_pub;
+  std_msgs::msg::UInt8 msg_enable;
   unsigned int cnt = 0; 
 
   // vehicle control
@@ -65,8 +67,8 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_brake_pub;
 
   // vehicle feedback 
-  rclcpp::Subscription<raptor_dbw_msgs::msg::GearReport>::SharedPtr m_gear_sub;
-  void on_gear_rcv(const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
+  rclcpp::Subscription<deep_orange_msgs::msg::PtReport>::SharedPtr m_gear_sub;
+  void on_gear_rcv(const deep_orange_msgs::msg::PtReport::SharedPtr msg);
 
   // variables for shifting state machine
   bool try_shifting; 

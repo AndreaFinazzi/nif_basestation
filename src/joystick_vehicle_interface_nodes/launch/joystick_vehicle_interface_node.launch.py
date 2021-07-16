@@ -28,6 +28,13 @@ def get_param(package_name, param_file):
 
 def generate_launch_description():
 
+    joy_translator_param = DeclareLaunchArgument(
+            'joy_translator_param',
+            default_value=[
+                get_param('joystick_vehicle_interface_nodes', 'param/logitech_f310.default.param.yaml')
+            ],
+            description='Path to config file for joystick translator')
+
     # joystick driver node
     joy = launch_ros.actions.Node(
         package='joy',
@@ -39,15 +46,19 @@ def generate_launch_description():
         package='joystick_vehicle_interface_nodes',
         node_executable='joystick_vehicle_interface_node_exe',
         output='screen',
+        parameters=[
+            LaunchConfiguration('joy_translator_param')
+        ],
         remappings=[
             ("gear_cmd", "/joystick/gear_cmd"),
-            ("accelerator_cmd", "/joystick/accelerator_cmd"),
-            ("steering_cmd", "/joystick/steering_cmd"),
+            ("accelerator_cmd", "/joystick/accelerator_cmd_max"),
+            ("steering_cmd", "/joystick/steering_cmd_not_used"),
             ("brake_cmd", "/joystick/brake_cmd"),
             ("emergency_stop", "/vehicle/emergency_stop"),
         ])
 
     ld = launch.LaunchDescription([
+        joy_translator_param,
         joy,
         joy_translator])
     return ld

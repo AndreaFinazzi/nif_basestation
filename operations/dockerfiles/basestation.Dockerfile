@@ -17,7 +17,7 @@ RUN apt install -y ros-foxy-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN apt install -y llvm-dev libclang-dev
 RUN git clone https://github.com/eclipse-zenoh/zenoh-plugin-dds
-RUN cd zenoh-plugin-dds && git checkout master && /root/.cargo/bin/cargo build --release
+RUN cd zenoh-plugin-dds && git checkout 5e4c99b2e60244837ee973f089e1088d41af7c18 && /root/.cargo/bin/cargo build --release
 RUN cp zenoh-plugin-dds/target/release/zenoh-bridge-dds /usr/bin
 
 # ADD Executables / config

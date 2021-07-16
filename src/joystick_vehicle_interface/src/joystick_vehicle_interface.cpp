@@ -15,6 +15,7 @@
 // Co-developed by Tier IV, Inc. and Apex.AI, Inc.
 #include "joystick_vehicle_interface/joystick_vehicle_interface.hpp"
 #include<iostream>
+#include <rclcpp/rclcpp.hpp>
 
 bool gear_allowed = false;
 

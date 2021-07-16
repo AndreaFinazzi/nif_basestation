@@ -93,11 +93,17 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
   m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", 1);
   m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", 1);
+  m_joy_enable_pub = create_publisher<std_msgs::msg::UInt8>("vehicle/joy_control_enable", 1);
 
   // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
     "joy", rclcpp::SensorDataQoS{},
     std::bind(&JoystickVehicleInterfaceNode::on_joy, this, std::placeholders::_1));
+
+  // gear subscription
+  m_gear_sub = create_subscription<deep_orange_msgs::msg::PtReport>(
+    "raptor_dbw_interface/pt_report", 1, 
+    std::bind(&JoystickVehicleInterfaceNode::on_gear_rcv, this, std::placeholders::_1));
 
   // Maps
   m_core = std::make_unique<joystick_vehicle_interface::JoystickVehicleInterface>(
@@ -132,6 +138,17 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
     msg.data = 1;
     m_emergency_stop->publish(msg);
   }
+  // enable vehicle control 
+  const auto send7 = msg->axes[7];
+  if(send7 == 1)
+  {
+    msg_enable.data = 1;
+  }
+  else if(send7 == -1)
+  {
+    msg_enable.data = 0;
+  }
+  m_joy_enable_pub->publish(msg_enable);
 
   // update gear shifting and output
   m_core->update_state_command(*msg);
@@ -141,24 +158,28 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
     // check if upshift was requested from the joystick and we are not already in sixth gear
     if(m_core->get_shift_up() && desired_gear < 6)
     {
+      RCLCPP_INFO(this->get_logger(), "Shift up");
       desired_gear++;
       // initialize shifting sequence
       try_shifting = true; 
-      shifting_counter = 10; 
     }
     // check if downshift was requested and we are not already in first gear
     else if(m_core->get_shift_down() && desired_gear > 1)
     {
+        RCLCPP_INFO(this->get_logger(), "Shift up");
         desired_gear--;
         // initialize shifting sequence
         try_shifting = true; 
-        shifting_counter = 10; 
     }
   }
   auto msg_gear = std_msgs::msg::UInt8(); 
   msg_gear.data = desired_gear;
-  m_gear_pub->publish(msg_gear);
-
+  // only publish after it has been initialized
+  if(desired_gear >= 0)
+  {
+    m_gear_pub->publish(msg_gear);
+  }
+  
   // output steering, throttle and brakes
   auto msg_throttle = std_msgs::msg::Float32();
   double data = 0; 
@@ -206,9 +227,9 @@ void JoystickVehicleInterfaceNode::shift_sequence_update()
   }
 }
 
-void JoystickVehicleInterfaceNode::on_gear_rcv(const raptor_dbw_msgs::msg::GearReport::SharedPtr msg)
+void JoystickVehicleInterfaceNode::on_gear_rcv(const deep_orange_msgs::msg::PtReport::SharedPtr msg)
 {
-  current_gear = msg->state.gear;
+  current_gear = msg->current_gear;
   // if gear was not initialized also initialize desired gear with current gear
   if(desired_gear == -1)
   {
