@@ -72,3 +72,7 @@ windows:
     - shell_command:
       - sleep 5
       - ros2 topic echo /raptor_dbw_interface/wheel_speed_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/pt_report
+
