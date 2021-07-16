@@ -20,6 +20,7 @@
 #include <joystick_vehicle_interface_nodes/visibility_control.hpp>
 #include "std_msgs/msg/u_int8.hpp"
 #include "std_msgs/msg/float32.hpp"
+#include "raptor_dbw_msgs/msg/gear_report.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -31,6 +32,8 @@ using joystick_vehicle_interface::Buttons;
 using joystick_vehicle_interface::AxisMap;
 using joystick_vehicle_interface::AxisScaleMap;
 using joystick_vehicle_interface::ButtonMap;
+
+using namespace std::chrono_literals;
 
 namespace joystick_vehicle_interface_nodes
 {
@@ -60,6 +63,18 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_accelerator_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_steering_pub;
   rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_brake_pub;
+
+  // vehicle feedback 
+  rclcpp::Subscription<raptor_dbw_msgs::msg::GearReport>::SharedPtr m_gear_sub;
+  void on_gear_rcv(const raptor_dbw_msgs::msg::GearReport::SharedPtr msg);
+
+  // variables for shifting state machine
+  bool try_shifting; 
+  int shifting_counter; 
+  int current_gear;
+  int desired_gear;
+  rclcpp::TimerBase::SharedPtr shift_sequence_timer;
+  void shift_sequence_update();
 
 };  // class JoystickVehicleInterfaceNode
 }  // namespace joystick_vehicle_interface_nodes

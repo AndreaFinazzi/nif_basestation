@@ -12,6 +12,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
+find_package(raptor_dbw_msgs REQUIRED)
 ament_auto_find_build_dependencies()
 # Node library
 set(JOYSTICK_VEHICLE_INTERFACE_LIB_NODE joystick_vehicle_interface_node)

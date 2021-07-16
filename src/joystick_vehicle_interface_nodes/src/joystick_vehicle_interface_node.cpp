@@ -87,21 +87,31 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   // basic functionality (trigger emergency stop and send heartbeat)
   m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", 1);
   m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", 1);
+
   // output vehicle commands
   m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", 1);
   m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
   m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", 1);
   m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", 1);
+
   // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
     "joy", rclcpp::SensorDataQoS{},
     std::bind(&JoystickVehicleInterfaceNode::on_joy, this, std::placeholders::_1));
+
   // Maps
   m_core = std::make_unique<joystick_vehicle_interface::JoystickVehicleInterface>(
     axis_map,
     axis_scale_map,
     axis_offset_map,
     button_map);
+
+  // initialize shifting state machine with no-shift state
+  try_shifting = false; 
+  shifting_counter = 0; 
+  // -1 indicates that they haven't been initialized
+  current_gear = -1;
+  desired_gear = -1;
 }
 
 
@@ -120,6 +130,29 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
 
   // update gear shifting and output
   m_core->update_state_command(*msg);
+  // only listen to gear shift commands while we are not already trying to shift
+  if(!try_shifting)
+  {
+    // check if upshift was requested from the joystick
+    if(m_core->get_shift_up())
+    {
+      desired_gear++;
+      // initialize shifting sequence
+      try_shifting = true; 
+      shifting_counter = 10; 
+    }
+    // check if downshift was requested
+    else if(m_core->get_shift_down())
+    {
+      desired_gear--;
+      // initialize shifting sequence
+      try_shifting = true; 
+      shifting_counter = 10; 
+    }
+  }
+  auto msg_gear = std_msgs::msg::UInt8(); 
+  msg_gear.data = desired_gear;
+  m_gear_pub->publish(msg_gear);
 
   // output steering, throttle and brakes
   auto msg_throttle = std_msgs::msg::Float32();
@@ -140,6 +173,35 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   auto msg_heartbeat = std_msgs::msg::UInt8();
   msg_heartbeat.data = cnt;
   m_heartbeat->publish(msg_heartbeat);
+}
+
+void JoystickVehicleInterfaceNode::shift_sequence_update()
+{
+  // decrease shift sequence counter to wait a prescribed number of cycles
+  shifting_counter--;
+  // if shifting sequence should be finished check desired and current gear
+  if(shifting_counter<=0)
+  {
+    // stop shifting sequence
+    try_shifting = false; 
+    shifting_counter = 0; 
+    // if the shift was not succesfull put desired gear back to current gear
+    if(current_gear != desired_gear)
+    {
+      desired_gear = current_gear;
+      RCLCPP_INFO(this->get_logger(), "Gear shift not succesfull. Reset desired gear to current gear.");
+    }
+  }
+}
+
+void JoystickVehicleInterfaceNode::on_gear_rcv(const raptor_dbw_msgs::msg::GearReport::SharedPtr msg)
+{
+  current_gear = msg->state.gear;
+  // if gear was not initialized also initialize desired gear with current gear
+  if(desired_gear == -1)
+  {
+    desired_gear = current_gear;
+  }
 }
 
 }  // namespace joystick_vehicle_interface_nodes
