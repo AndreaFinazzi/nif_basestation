@@ -75,6 +75,7 @@ private:
   int desired_gear;
   rclcpp::TimerBase::SharedPtr shift_sequence_timer;
   void shift_sequence_update();
+  int shift_time_ms;
 
 };  // class JoystickVehicleInterfaceNode
 }  // namespace joystick_vehicle_interface_nodes

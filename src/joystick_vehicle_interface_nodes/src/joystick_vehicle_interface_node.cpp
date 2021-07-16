@@ -112,6 +112,11 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   // -1 indicates that they haven't been initialized
   current_gear = -1;
   desired_gear = -1;
+  // make shifting time a parameter 
+  this->declare_parameter<int>("shift_time_ms", 1000);
+  // initialize timer 
+  shift_sequence_timer = this->create_wall_timer(
+      20ms, std::bind(&JoystickVehicleInterfaceNode::shift_sequence_update, this));
 }
 
 
@@ -133,21 +138,21 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   // only listen to gear shift commands while we are not already trying to shift
   if(!try_shifting)
   {
-    // check if upshift was requested from the joystick
-    if(m_core->get_shift_up())
+    // check if upshift was requested from the joystick and we are not already in sixth gear
+    if(m_core->get_shift_up() && desired_gear < 6)
     {
       desired_gear++;
       // initialize shifting sequence
       try_shifting = true; 
       shifting_counter = 10; 
     }
-    // check if downshift was requested
-    else if(m_core->get_shift_down())
+    // check if downshift was requested and we are not already in first gear
+    else if(m_core->get_shift_down() && desired_gear > 1)
     {
-      desired_gear--;
-      // initialize shifting sequence
-      try_shifting = true; 
-      shifting_counter = 10; 
+        desired_gear--;
+        // initialize shifting sequence
+        try_shifting = true; 
+        shifting_counter = 10; 
     }
   }
   auto msg_gear = std_msgs::msg::UInt8(); 
@@ -177,19 +182,26 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
 
 void JoystickVehicleInterfaceNode::shift_sequence_update()
 {
-  // decrease shift sequence counter to wait a prescribed number of cycles
-  shifting_counter--;
-  // if shifting sequence should be finished check desired and current gear
-  if(shifting_counter<=0)
+  // only update shift sequence if we are shifting
+  if(try_shifting)
   {
-    // stop shifting sequence
-    try_shifting = false; 
-    shifting_counter = 0; 
-    // if the shift was not succesfull put desired gear back to current gear
-    if(current_gear != desired_gear)
+    // increase shift sequence counter to wait a prescribed number of cycles
+    shifting_counter++;
+    // update shift time
+    this->get_parameter("shift_time_ms", shift_time_ms);
+    // if shifting sequence should be finished check desired and current gear
+    // cycle time of this is 20ms
+    if(20*shifting_counter >= shift_time_ms)
     {
-      desired_gear = current_gear;
-      RCLCPP_INFO(this->get_logger(), "Gear shift not succesfull. Reset desired gear to current gear.");
+      // stop shifting sequence
+      try_shifting = false; 
+      shifting_counter = 0; 
+      // if the shift was not succesfull put desired gear back to current gear
+      if(current_gear != desired_gear)
+      {
+        desired_gear = current_gear;
+        RCLCPP_INFO(this->get_logger(), "Gear shift not succesfull. Reset desired gear to current gear.");
+      }
     }
   }
 }
