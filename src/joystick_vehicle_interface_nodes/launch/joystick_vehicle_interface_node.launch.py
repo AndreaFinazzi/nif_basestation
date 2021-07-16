@@ -42,8 +42,8 @@ def generate_launch_description():
         remappings=[
             ("gear_cmd", "/joystick/gear_cmd"),
             ("accelerator_cmd", "/joystick/accelerator_cmd"),
-            ("steering_cmd", "/vehicle/steering_cmd"),
-            ("brake_cmd", "/vehicle/brake_cmd"),
+            ("steering_cmd", "/joystick/steering_cmd"),
+            ("brake_cmd", "/joystick/brake_cmd"),
             ("emergency_stop", "/vehicle/emergency_stop"),
         ])
 
