@@ -197,6 +197,7 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
 
   // publish heartbeat
   auto msg_heartbeat = std_msgs::msg::UInt8();
+  cnt++;
   msg_heartbeat.data = cnt;
   m_heartbeat->publish(msg_heartbeat);
 }
