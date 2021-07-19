@@ -175,7 +175,7 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   auto msg_gear = std_msgs::msg::UInt8(); 
   msg_gear.data = desired_gear;
   // only publish after it has been initialized and the engine is running
-  if(desired_gear >= 0)
+  if(desired_gear >= 0 && engine_running)
   {
     m_gear_pub->publish(msg_gear);
   }
