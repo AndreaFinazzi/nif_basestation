@@ -30,6 +30,7 @@ ament_target_dependencies(ui_publisher rclcpp std_msgs deep_orange_msgs)
 
 install(TARGETS
    ui_raceflag
+   ui_publisher
    DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
