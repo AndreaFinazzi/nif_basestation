@@ -32,6 +32,7 @@ class MinimalSubscriber : public rclcpp::Node
 
     void timer_callback()
     {
+      auto RCInfo = deep_orange_msgs::msg::RcToCt();
       RCInfo.track_cond = rcflag;
       RCInfo.black = black;
       RCInfo.checkered = checkered;
