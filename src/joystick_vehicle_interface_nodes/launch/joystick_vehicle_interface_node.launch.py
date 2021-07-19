@@ -28,30 +28,12 @@ def get_param(package_name, param_file):
 
 def generate_launch_description():
 
-    # --------------------------------- Params -------------------------------
-
-    # In combination 'raw', 'basic' and 'high_level' control
-    # in what mode of control comands to operate in,
-    # only one of them can be active at a time with a value
-    control_command_param = DeclareLaunchArgument(
-        'control_command',
-        default_value="raw",  # use "raw", "basic" or "high_level"
-        description='command control mode topic name')
-    
-    control_command_param_high = DeclareLaunchArgument(
-        'control_command_high',
-        default_value="high",  # use "raw", "basic" or "high_level"
-        description='command control mode topic name')
-    
-    # Default joystick translator params
     joy_translator_param = DeclareLaunchArgument(
-        'joy_translator_param',
-        default_value=[
-            get_param('joystick_vehicle_interface_nodes', 'param/logitech_f310.default.param.yaml')
-        ],
-        description='Path to config file for joystick translator')
-
-    # -------------------------------- Nodes-----------------------------------
+            'joy_translator_param',
+            default_value=[
+                get_param('joystick_vehicle_interface_nodes', 'param/logitech_f310.default.param.yaml')
+            ],
+            description='Path to config file for joystick translator')
 
     # joystick driver node
     joy = launch_ros.actions.Node(
@@ -65,22 +47,17 @@ def generate_launch_description():
         node_executable='joystick_vehicle_interface_node_exe',
         output='screen',
         parameters=[
-            LaunchConfiguration('joy_translator_param'),
-            # overwrite parameters from yaml here
-            {"control_command": LaunchConfiguration('control_command')}
+            LaunchConfiguration('joy_translator_param')
         ],
         remappings=[
-            ("raw_command", "/joystick/raw_command"),
-            ("high_level_command", "/vehicle/high_level_command"),
-            ("state_command", "/vehicle/state_command"),
+            ("gear_cmd", "/joystick/gear_cmd"),
+            ("accelerator_cmd", "/joystick/accelerator_cmd_max"),
+            ("steering_cmd", "/joystick/steering_cmd_not_used"),
+            ("brake_cmd", "/joystick/brake_cmd"),
             ("emergency_stop", "/vehicle/emergency_stop"),
-            ("joy_control_enable", "/vehicle/joy_control_enable"),
-            ("joy_shutdown", "/vehicle/shutdown_confirmation")
         ])
 
     ld = launch.LaunchDescription([
-        control_command_param,
-        control_command_param_high,
         joy_translator_param,
         joy,
         joy_translator])

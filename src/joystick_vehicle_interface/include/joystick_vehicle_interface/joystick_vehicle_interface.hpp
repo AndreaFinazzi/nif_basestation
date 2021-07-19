@@ -98,51 +98,36 @@ public:
     const ButtonMap & button_map);
   /// Compute state command
   bool update_state_command(const sensor_msgs::msg::Joy & msg);
-  /// Compute control command
-  template<typename T>
-  T compute_command(const sensor_msgs::msg::Joy & msg);
-  void reset_recordplay();
+  /// Convert raw axis value with affine transform for type
+  void axis_value(
+    const sensor_msgs::msg::Joy & msg,
+    Axes axis, double & value) const;
+  void axis_value_steer(
+    const sensor_msgs::msg::Joy & msg,
+    Axes axis, double & value) const;
+  void axis_value_throttle(
+    const sensor_msgs::msg::Joy & msg,
+    Axes axis, double & value) const;
   const VehicleStateCommand & get_state_command();
-  const std_msgs::msg::UInt8 & get_recordreplay_command();
-  VehicleStateCommand gear_data{};
-  decltype(gear_data.gear) increment = 1;
-  decltype(gear_data.gear) decrement = 1;
-  decltype(gear_data.gear) gear_val=0;
+
+  void reset_shift_request(); 
+  bool get_shift_up(); 
+  bool get_shift_down(); 
+  void reset_shift_up();
+  void reset_shift_down();
 
 private:
   /// Given an active button, update the state command
-  JOYSTICK_VEHICLE_INTERFACE_LOCAL bool handle_active_button(Buttons button);
-  /// Convert raw axis value with affine transform for type
-  template<typename T>
-  JOYSTICK_VEHICLE_INTERFACE_LOCAL void axis_value(
-    const sensor_msgs::msg::Joy & msg,
-    Axes axis, T & value) const;
-  template<typename T>  
-  JOYSTICK_VEHICLE_INTERFACE_LOCAL void axis_value_steer(
-    const sensor_msgs::msg::Joy & msg,
-    Axes axis, T & value) const;
-  template<typename T>  
-  JOYSTICK_VEHICLE_INTERFACE_LOCAL void axis_value_throttle(
-    const sensor_msgs::msg::Joy & msg,
-    Axes axis, T & value) const;
-
-  using HighLevelControl = autoware_auto_msgs::msg::HighLevelControlCommand;
-  using BasicControl = autoware_auto_msgs::msg::VehicleControlCommand;
-  using RawControl = autoware_auto_msgs::msg::RawControlCommand;
+  bool handle_active_button(Buttons button);
 
   AxisMap m_axis_map{};
   AxisScaleMap m_axis_scale_map{};
   AxisScaleMap m_axis_offset_map{};
   ButtonMap m_button_map{};
-  bool m_autonomous{false};
-  bool m_wipers_on{false};
-  bool m_headlights_on{false};
-  bool m_hand_brake_on{false};
-  bool m_horn_on{false};
-  decltype(HighLevelControl::velocity_mps) m_velocity{};
 
   VehicleStateCommand m_state_command{};
-  std_msgs::msg::UInt8 m_recordreplay_command{};
+  bool m_shift_up{false};
+  bool m_shift_down{false};
 };  // class JoystickVehicleInterface
 }  // namespace joystick_vehicle_interface
 

@@ -6,11 +6,9 @@ windows:
     - shell_command:
       - echo "Sleeping 5 seconds before launching zenoh"
       - sleep 2
-      - bst_fm.sh
+      - /workspace/operations/scripts/bst_fm.sh
     - shell_command:
       - ros2 launch joystick_vehicle_interface_nodes joystick_vehicle_interface_node.launch.py
-    - shell_command:
-      - ros2 run intermediate_node intermediate_node
   - window_name: User Inputs
     layout: tiled
     panes:
@@ -19,7 +17,7 @@ windows:
     - shell_command:
       - ros2 run userinput ui_publisher
     - shell_command:
-      - remote_spoof_spawn.sh
+      - /workspace/operations/scripts/remote_spoof_spawn.sh
   - window_name: Ping and State
     layout: tiled
     panes:
@@ -49,16 +47,32 @@ windows:
       - ros2 topic echo /joystick/steering_cmd
     - shell_command:
       - sleep 5
-      - ros2 topic echo /vehicle/state_command
-    - shell_command:
-      - sleep 5
-      - ros2 run heartbeat_node heart_exec_TX
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /vehicle/joy_control_enable
+      - ros2 topic echo /joystick/gear_cmd
     - shell_command:
       - sleep 5
       - ros2 topic hz /counter
     - shell_command:
       - sleep 5
       - ros2 topic echo /vehicle/emergency_stop
+  - window_name: Car Diagnostics
+    layout: tiled
+    panes:
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/brake_pressure_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/gear_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/low_voltage_system_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/vehicle_kinematic_state
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/wheel_speed_report
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /raptor_dbw_interface/pt_report
+

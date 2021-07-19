@@ -1,6 +1,7 @@
+version: '2.0'
 services:
     iac_basestation:
-        image: iacteams/basestation
+        image: iacteams/basestation:latest
         build:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
@@ -12,7 +13,12 @@ services:
         security_opt:
             - seccomp:unconfined
         volumes:
-            - ${IAC_BASESTATION_ROOT}:/workspace
+            - ${IAC_BASESTATION_ROOT}/operations:/workspace/operations
+            - ${IAC_BASESTATION_ROOT}/build:/workspace/build
+            - ${IAC_BASESTATION_ROOT}/install:/workspace/install
+            - ${IAC_BASESTATION_ROOT}/src/joystick_vehicle_interface:/workspace/src/joystick_vehicle_interface
+            - ${IAC_BASESTATION_ROOT}/src/joystick_vehicle_interface_nodes:/workspace/src/joystick_vehicle_interface_nodes
+            - ${IAC_BASESTATION_ROOT}/src/userinput:/workspace/src/userinput
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input

@@ -21,25 +21,15 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(deep_orange_msgs REQUIRED)
 
-add_executable(ui_velocity src/vel_input.cpp)
-add_executable(ui_pt_gains src/pt_test_input.cpp)
 add_executable(ui_raceflag src/race_flag_input.cpp)
 add_executable(ui_publisher src/publisher.cpp)
 
-ament_target_dependencies(ui_velocity rclcpp std_msgs)
-ament_target_dependencies(ui_pt_gains rclcpp std_msgs)
 ament_target_dependencies(ui_raceflag rclcpp std_msgs deep_orange_msgs)
 ament_target_dependencies(ui_publisher rclcpp std_msgs deep_orange_msgs)
 
-install(TARGETS
-  ui_velocity
-  ui_pt_gains
-  ui_raceflag
-  ui_publisher
-  DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY
-  launch
-  DESTINATION share/${PROJECT_NAME}/
-)
+install(TARGETS
+   ui_raceflag
+   DESTINATION lib/${PROJECT_NAME})
+
 ament_package()

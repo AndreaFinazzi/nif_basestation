@@ -30,15 +30,6 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   const rclcpp::NodeOptions & node_options)
 : Node{"joystick_vehicle_interface_nodes", node_options}
 {
-  // topics
-  const auto control_command =
-    declare_parameter("control_command").get<std::string>();
-
-  const auto control_command_high =
-    declare_parameter("control_command_high").get<std::string>();
-  const bool recordreplay_command_enabled =
-    declare_parameter("recordreplay_command_enabled").get<bool>();
-
   // maps
   const auto check_set = [this](auto & map, auto key, const std::string & param_name) {
       const auto param = declare_parameter(param_name);
@@ -93,150 +84,172 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   check_set(button_map, Buttons::RECORDREPLAY_START_REPLAY, "buttons.recordreplay_start_replay");
   check_set(button_map, Buttons::RECORDREPLAY_STOP, "buttons.recordreplay_stop");
 
-  // Control commands
-  m_enable_joy_pub = create_publisher<Int8need>(
-      "emergency_stop",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  m_enable_joy_control_pub = create_publisher<Int8need>(
-      "joy_control_enable",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  m_shutdown_pub = create_publisher<std_msgs::msg::Int8>(
-      "joy_shutdown",
-      rclcpp::QoS{10U}.reliable().durability_volatile());    
-  if (control_command == "high_level") {
-    m_cmd_pub = create_publisher<HighLevelControl>(
-      "high_level_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else if (control_command == "raw") {
-    m_cmd_pub = create_publisher<RawControl>(
-      "raw_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else if (control_command == "basic") {
-    m_cmd_pub = create_publisher<BasicControl>(
-      "basic_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else {
-    throw std::domain_error
-          {"JoystickVehicleInterfaceNode does not support " + control_command +
-            "command control mode"};
-  }
-  if (control_command_high == "high_level") {
-    m_cmd_pub_high = create_publisher<HighLevelControl>(
-      "high_level_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else if (control_command_high == "raw") {
-    m_cmd_pub_high = create_publisher<RawControl>(
-      "raw_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else if (control_command_high == "basic") {
-    m_cmd_pub_high = create_publisher<BasicControl>(
-      "basic_command",
-      rclcpp::QoS{10U}.reliable().durability_volatile());
-  } else {
-    throw std::domain_error
-          {"JoystickVehicleInterfaceNode does not support " + control_command_high +
-            "command control mode"};
-  }
+  // basic functionality (trigger emergency stop and send heartbeat)
+  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", 1);
+  m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", 1);
 
-  // State commands
-  m_state_cmd_pub =
-    create_publisher<autoware_auto_msgs::msg::VehicleStateCommand>(
-    "state_command",
-    rclcpp::QoS{10U}.reliable().durability_volatile());
+  // output vehicle commands
+  m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", 1);
+  m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
+  m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", 1);
+  m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", 1);
+  m_joy_enable_pub = create_publisher<std_msgs::msg::UInt8>("vehicle/joy_control_enable", 1);
 
-  // Recordreplay command
-  if (recordreplay_command_enabled) {
-    m_recordreplay_cmd_pub = create_publisher<std_msgs::msg::UInt8>("recordreplay_cmd", 10);
-  }
-
-  // Joystick
+  // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
     "joy", rclcpp::SensorDataQoS{},
-    [this](const sensor_msgs::msg::Joy::SharedPtr msg) {on_joy(msg);});
+    std::bind(&JoystickVehicleInterfaceNode::on_joy, this, std::placeholders::_1));
+
+  // gear subscription
+  m_gear_sub = create_subscription<deep_orange_msgs::msg::PtReport>(
+    "raptor_dbw_interface/pt_report", 1, 
+    std::bind(&JoystickVehicleInterfaceNode::on_gear_rcv, this, std::placeholders::_1));
+
   // Maps
   m_core = std::make_unique<joystick_vehicle_interface::JoystickVehicleInterface>(
     axis_map,
     axis_scale_map,
     axis_offset_map,
     button_map);
+
+  // initialize shifting state machine with no-shift state
+  try_shifting = false; 
+  shifting_counter = 0; 
+  // -1 indicates that they haven't been initialized
+  current_gear = -1;
+  desired_gear = -1;
+  // make shifting time a parameter 
+  this->declare_parameter<int>("shift_time_ms", 1000);
+  // initialize timer 
+  shift_sequence_timer = this->create_wall_timer(
+      20ms, std::bind(&JoystickVehicleInterfaceNode::shift_sequence_update, this));
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr msg)
 {
-  // uint32_t emer_flag = 0;
-  const auto send = msg->buttons[7];
-  const auto send1 = msg->buttons[6];
-  // int checker = 0;
-  if (send == 1 && send1 == 1)
-  {
-    // variable.stamp = msg->header.stamp;
-    variable.data = 0;
-    flag_allowed = false;
-    // std::cout<<"1 oduthu"<<std::endl;
-  }
-  // std::cout<<checker<<std::endl;
-  m_enable_joy_pub->publish(variable);
+  // do a purple flag shutdown if both levers are pressed
   const auto send3 = msg->buttons[4];
   const auto send4 = msg->buttons[5];
   if (send3 == 1 && send4 == 1)
   {
-    variable.data = 1;
-    flag_allowed = true;
-    // std::cout<<"3 oduthu"<<std::endl;
-    m_enable_joy_pub->publish(variable);
+    auto msg = std_msgs::msg::UInt8();
+    msg.data = 1;
+    m_emergency_stop->publish(msg);
+  }
+  // enable vehicle control 
+  const auto send7 = msg->axes[7];
+  if(send7 == 1)
+  {
+    msg_enable.data = 1;
+  }
+  else if(send7 == -1)
+  {
+    msg_enable.data = 0;
+  }
+  m_joy_enable_pub->publish(msg_enable);
+
+  // update gear shifting and output
+  m_core->update_state_command(*msg);
+  // only listen to gear shift commands while we are not already trying to shift
+  if(!try_shifting)
+  {
+    // check if upshift was requested from the joystick and we are not already in sixth gear
+    if(m_core->get_shift_up() && desired_gear < 6)
+    {
+      RCLCPP_INFO(this->get_logger(), "Shift up");
+      desired_gear++;
+      // initialize shifting sequence
+      try_shifting = true; 
+    }
+    // check if downshift was requested and we are not already in first gear
+    else if(m_core->get_shift_down() && desired_gear > 0)
+    {
+        RCLCPP_INFO(this->get_logger(), "Shift up");
+        desired_gear--;
+        // initialize shifting sequence
+        try_shifting = true; 
+    }
+  }
+  auto msg_gear = std_msgs::msg::UInt8(); 
+  msg_gear.data = desired_gear;
+  // only publish after it has been initialized and the engine is running
+  if(desired_gear >= 0 && engine_running)
+  {
+    m_gear_pub->publish(msg_gear);
   }
   
-  const auto shutdown = msg->axes[6];
-  variable_shutdown.data = 0;  //default
-  if (shutdown == 1 )
-  {
-    variable_shutdown.data = -1;  //left press goes to ct_4
-  }
-  else if (shutdown == -1)
-  {
-    variable_shutdown.data = 1;  //right press goes to emergency shutdown
-  }
-  m_shutdown_pub->publish(variable_shutdown);
-  
-  const auto enable = msg->axes[7];
-  if (enable == 1 )
-  {
-    variable_joy_control.data = 1;
-  }
-  else if (enable == -1)
-  {
-    variable_joy_control.data = 0;
-  }
-  m_enable_joy_control_pub->publish(variable_joy_control);
-  // State command: modify state first
-  if (m_core->update_state_command(*msg)) {
-    auto state_command = m_core->get_state_command();
-    m_state_cmd_pub->publish(state_command);
-  }
-  // Command publish
-  const auto compute_publish_command = [this, &msg](auto && pub) -> void {
-      using MessageT =
-        typename std::decay_t<decltype(pub)>::element_type::MessageUniquePtr::element_type;
-      const auto cmd = m_core->compute_command<MessageT>(*msg);
-      pub->publish(cmd);
-    };
-  mpark::visit(compute_publish_command, m_cmd_pub);
+  // output steering, throttle and brakes
+  auto msg_throttle = std_msgs::msg::Float32();
+  double data = 0; 
+  m_core->axis_value_throttle(*msg, Axes::THROTTLE, data);
+  msg_throttle.data = data;
+  m_accelerator_pub->publish(msg_throttle);
+  auto msg_brake = std_msgs::msg::Float32();
+  m_core->axis_value(*msg, Axes::BRAKE, data);
+  msg_brake.data = data;
+  m_brake_pub->publish(msg_brake);
+  auto msg_steering = std_msgs::msg::Float32();
+  m_core->axis_value_steer(*msg, Axes::FRONT_STEER, data);
+  msg_steering.data = data;
+  m_steering_pub->publish(msg_steering);
 
-  // Command publish
-  const auto compute_publish_command_high = [this, &msg](auto && pub) -> void {
-      using MessageT =
-        typename std::decay_t<decltype(pub)>::element_type::MessageUniquePtr::element_type;
-      const auto cmd = m_core->compute_command<MessageT>(*msg);
-      pub->publish(cmd);
-    };
-  mpark::visit(compute_publish_command_high, m_cmd_pub_high);  
+  // publish heartbeat
+  auto msg_heartbeat = std_msgs::msg::UInt8();
+  cnt++;
+  if(cnt > 9)
+  {
+    cnt = 0;
+  }
+  msg_heartbeat.data = cnt;
+  m_heartbeat->publish(msg_heartbeat);
+}
 
-  auto recordreplay_command = m_core->get_recordreplay_command();
-  if (m_recordreplay_cmd_pub != nullptr && recordreplay_command.data > 0u) {
-    m_recordreplay_cmd_pub->publish(recordreplay_command);
-    m_core->reset_recordplay();
+void JoystickVehicleInterfaceNode::shift_sequence_update()
+{
+  // only update shift sequence if we are shifting
+  if(try_shifting)
+  {
+    // increase shift sequence counter to wait a prescribed number of cycles
+    shifting_counter++;
+    // update shift time
+    this->get_parameter("shift_time_ms", shift_time_ms);
+    // if shifting sequence should be finished check desired and current gear
+    // cycle time of this is 20ms
+    if(20*shifting_counter >= shift_time_ms)
+    {
+      // stop shifting sequence
+      try_shifting = false; 
+      m_core->reset_shift_up();
+      m_core->reset_shift_down();
+      shifting_counter = 0; 
+      // if the shift was not succesfull put desired gear back to current gear
+      if(current_gear != desired_gear)
+      {
+        desired_gear = current_gear;
+        RCLCPP_INFO(this->get_logger(), "Gear shift not succesfull. Reset desired gear to current gear.");
+      }
+    }
+  }
+}
+
+void JoystickVehicleInterfaceNode::on_gear_rcv(const deep_orange_msgs::msg::PtReport::SharedPtr msg)
+{
+  current_gear = msg->current_gear;
+  // if gear was not initialized also initialize desired gear with current gear
+  if(desired_gear == -1)
+  {
+    desired_gear = current_gear;
+  }
+  // evaluate if engine is running 
+  if(msg->engine_rpm > 500)
+  {
+    engine_running = true;
+  }
+  else
+  {
+    engine_running = false;
   }
 }
 

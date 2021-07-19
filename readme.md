@@ -7,7 +7,7 @@ Joshua Spisak <jspisak@andrew.cmu.edu>
 
 Dependencies:
 docker
-docker-compose (pip3 install --upgrade pip setuptools && pip3 install --upgrade docker-compose)
+docker-compose (https://docs.docker.com/compose/install/)
 
 Prelims:
 bastation ip:
@@ -38,4 +38,12 @@ Then:
 To open a bash shell inside the container:
 ```
 ./operations/scripts/bst_docker_join.sh
+```
+
+Troubleshoot:
+
+Issue #1 :  docker.errors.DockerException: Error while fetching server API version: ('Connection aborted.', PermissionError(13, 'Permission denied'))
+
+```
+sudo chmod 666 /var/run/docker.sock
 ```
