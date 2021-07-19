@@ -72,6 +72,7 @@ private:
 
   // variables for shifting state machine
   bool try_shifting; 
+  bool engine_running;
   int shifting_counter; 
   int current_gear;
   int desired_gear;

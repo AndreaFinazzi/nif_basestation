@@ -174,7 +174,7 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   }
   auto msg_gear = std_msgs::msg::UInt8(); 
   msg_gear.data = desired_gear;
-  // only publish after it has been initialized
+  // only publish after it has been initialized and the engine is running
   if(desired_gear >= 0)
   {
     m_gear_pub->publish(msg_gear);
@@ -216,6 +216,8 @@ void JoystickVehicleInterfaceNode::shift_sequence_update()
     {
       // stop shifting sequence
       try_shifting = false; 
+      m_core->reset_shift_up();
+      m_core->reset_shift_down();
       shifting_counter = 0; 
       // if the shift was not succesfull put desired gear back to current gear
       if(current_gear != desired_gear)
@@ -234,6 +236,15 @@ void JoystickVehicleInterfaceNode::on_gear_rcv(const deep_orange_msgs::msg::PtRe
   if(desired_gear == -1)
   {
     desired_gear = current_gear;
+  }
+  // evaluate if engine is running 
+  if(msg->engine_rpm > 500)
+  {
+    engine_running = true;
+  }
+  else
+  {
+    engine_running = false;
   }
 }
 

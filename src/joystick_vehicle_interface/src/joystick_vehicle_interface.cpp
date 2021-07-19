@@ -155,9 +155,19 @@ bool JoystickVehicleInterface::get_shift_down()
   return m_shift_down;
 }
 
+void JoystickVehicleInterface::reset_shift_down()
+{
+  m_shift_down = false;
+}
+
 bool JoystickVehicleInterface::get_shift_up()
 {
   return m_shift_up;
+}
+
+void JoystickVehicleInterface::reset_shift_up()
+{
+  m_shift_up = false;
 }
 
 }  // namespace joystick_vehicle_interface

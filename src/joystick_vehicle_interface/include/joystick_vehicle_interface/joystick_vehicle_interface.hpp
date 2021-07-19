@@ -113,6 +113,8 @@ public:
   void reset_shift_request(); 
   bool get_shift_up(); 
   bool get_shift_down(); 
+  void reset_shift_up();
+  void reset_shift_down();
 
 private:
   /// Given an active button, update the state command
