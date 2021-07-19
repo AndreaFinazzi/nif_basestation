@@ -25,6 +25,8 @@ add_executable(ui_raceflag src/race_flag_input.cpp)
 add_executable(ui_publisher src/publisher.cpp)
 
 ament_target_dependencies(ui_raceflag rclcpp std_msgs deep_orange_msgs)
+ament_target_dependencies(ui_publisher rclcpp std_msgs deep_orange_msgs)
+
 
 install(TARGETS
    ui_raceflag
