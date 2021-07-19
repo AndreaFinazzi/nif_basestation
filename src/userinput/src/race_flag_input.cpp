@@ -14,19 +14,16 @@ class RCFlagInput : public rclcpp::Node
       publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("/raptor_dbw_interface/rc_to_ct", 10);
       timer_ = this->create_wall_timer(
       500ms, std::bind(&RCFlagInput::timer_callback, this));
-      timer_publish = this->create_wall_timer(
-      500ms, std::bind(&RCFlagInput::timer_callback_publish, this));
     }
 
   private:
-
-    deep_orange_msgs::msg::RcToCt RaceControlFlag;
 
     void timer_callback()
     {
       unsigned int rcflag;
       // bool confirm;
       unsigned int vehcond;
+      auto RaceControlFlag = deep_orange_msgs::msg::RcToCt();
       std::cout << "Enter RC flag input [1-4] [1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
       std::cin >> rcflag;
       std::string confirmation_race_flag = "oogabooga";
@@ -89,16 +86,11 @@ class RCFlagInput : public rclcpp::Node
          RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
       }
     
-      RCLCPP_INFO(this->get_logger(), "Changed to race flag: '%u', vehicle flag: '%u'", RaceControlFlag.track_cond, vehcond);
+      RCLCPP_INFO(this->get_logger(), "Publishing race flag: '%u', vehicle flag: '%u'", RaceControlFlag.track_cond, vehcond);
+      publisher_->publish(RaceControlFlag);
       
     }
-
-    void timer_callback_publish()
-    {
-      publisher_->publish(RaceControlFlag);
-    }
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::TimerBase::SharedPtr timer_publish;
     rclcpp::Publisher<deep_orange_msgs::msg::RcToCt>::SharedPtr publisher_;
     // size_t count_;
 };
