@@ -50,10 +50,10 @@ def generate_launch_description():
             LaunchConfiguration('joy_translator_param')
         ],
         remappings=[
-            ("gear_cmd", "/joystick/gear_cmd"),
+            ("gear_cmd", "/joystick/gear_cmd_not_used"),
             ("accelerator_cmd", "/joystick/accelerator_cmd_max"),
             ("steering_cmd", "/joystick/steering_cmd_not_used"),
-            ("brake_cmd", "/joystick/brake_cmd"),
+            ("brake_cmd", "/joystick/brake_cmd_override"),
             ("emergency_stop", "/vehicle/emergency_stop"),
         ])
 
