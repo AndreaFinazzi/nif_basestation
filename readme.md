@@ -1,3 +1,5 @@
+## Basestation
+
 TODO:
 - add visualizer?
 - get stuff working... haha
@@ -47,3 +49,7 @@ Issue #1 :  docker.errors.DockerException: Error while fetching server API versi
 ```
 sudo chmod 666 /var/run/docker.sock
 ```
+
+## Use battery monitor
+- Launch a separate terminal on a pitlane laptop
+- 
