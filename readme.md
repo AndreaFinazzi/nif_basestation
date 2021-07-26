@@ -42,6 +42,12 @@ To open a bash shell inside the container:
 ./operations/scripts/bst_docker_join.sh
 ```
 
+To close the base station, type:
+```
+Ctrl-B, :kill-session
+```
+and press Enter.
+
 Troubleshoot:
 
 Issue #1 :  docker.errors.DockerException: Error while fetching server API version: ('Connection aborted.', PermissionError(13, 'Permission denied'))
