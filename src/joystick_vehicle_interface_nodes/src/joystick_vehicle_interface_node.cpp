@@ -102,7 +102,7 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
 
   // gear subscription
   m_gear_sub = create_subscription<deep_orange_msgs::msg::PtReport>(
-    "raptor_dbw_interface/pt_report", 1, 
+    "telemetry/pt_report", 1, 
     std::bind(&JoystickVehicleInterfaceNode::on_gear_rcv, this, std::placeholders::_1));
 
   // Maps

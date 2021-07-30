@@ -29,10 +29,10 @@ windows:
       - ping 10.42.0.254
     - shell_command:
       - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/misc_report_do deep_orange_msgs/msg/MiscReport
+      - ros2 topic echo /telemetry/misc_report_do deep_orange_msgs/msg/MiscReport
     - shell_command:
       - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/ct_report deep_orange_msgs/msg/CtReport
+      - ros2 topic echo /telemetry/ct_report deep_orange_msgs/msg/CtReport
   - window_name: Telemetry Printouts
     layout: tiled
     panes:
@@ -59,20 +59,5 @@ windows:
     panes:
     - shell_command:
       - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/brake_pressure_report
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/gear_report
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/low_voltage_system_report
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/vehicle_kinematic_state
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/wheel_speed_report
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /raptor_dbw_interface/pt_report
+      - ros2 topic echo /telemetry/pt_report
 
