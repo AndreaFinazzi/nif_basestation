@@ -38,7 +38,7 @@ RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 RUN echo "export CYCLONEDDS_URI=file:///etc/cyclone/cyclonedds.xml" >> ~/.bashrc
 RUN echo "export CYCLONE_INCLUDE=/opt/ros/foxy/include" >> ~/.bashrc
 RUN echo "export CYCLONE_LIB=/opt/ros/foxy/lib/x86_64-linux-gnu" >> ~/.bashrc
-RUN echo "export ROS_DOMAIN_ID=2" >> ~/.bashrc
+RUN echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> ~/.bashrc
 RUN echo "source /workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "alias e_shutdown='/workspace/install/shutdown.sh'" >> ~/.bashrc
