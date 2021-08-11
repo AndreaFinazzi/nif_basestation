@@ -37,8 +37,8 @@ def generate_launch_description():
 
     # joystick driver node
     joy = launch_ros.actions.Node(
-        package='joy_linux',
-        node_executable='joy_linux_node',
+        package='joy',
+        node_executable='joy_node',
         output='screen', 
         parameters=[{'autorepeat_rate': 100.0}])
 
