@@ -16,8 +16,8 @@ RUN apt install -y ros-foxy-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
 # https://github.com/eclipse-zenoh/zenoh-plugin-dds
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN apt install -y llvm-dev libclang-dev
-RUN git clone https://github.com/eclipse-zenoh/zenoh-plugin-dds
-RUN cd zenoh-plugin-dds && git checkout IAC && /root/.cargo/bin/cargo build --release
+RUN git clone --branch IAC https://github.com/eclipse-zenoh/zenoh-plugin-dds
+RUN cd zenoh-plugin-dds && /root/.cargo/bin/cargo build --release
 RUN cp zenoh-plugin-dds/target/release/zenoh-bridge-dds /usr/bin
 
 # ADD Executables / config
@@ -29,7 +29,7 @@ RUN apt update \
     && apt install -y ros-foxy-joy* iputils* ros-foxy-autoware-auto-msgs tmux tmuxp nano
 
 # message dependencies 
-RUN git clone https://gitlab.com/IACBaseSoftware/deep_orange_msgs.git /workspace/src/
+RUN git clone --branch merge_joystick https://gitlab.com/IACBaseSoftware/deep_orange_msgs.git /workspace/src/deep_orange_msgs
 RUN git clone https://gitlab.com/IACBaseSoftware/raptor-dbw-ros2.git /workspace/src/raptor-dbw-ros2
 
 # Setup Bashrc
