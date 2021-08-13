@@ -84,25 +84,29 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   check_set(button_map, Buttons::RECORDREPLAY_START_REPLAY, "buttons.recordreplay_start_replay");
   check_set(button_map, Buttons::RECORDREPLAY_STOP, "buttons.recordreplay_stop");
 
+  // setup QOS to be best effort
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 1));
+  qos.best_effort();
+
   // basic functionality (trigger emergency stop and send heartbeat)
-  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", 1);
-  m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", 1);
+  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", qos);
+  m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", qos);
 
   // output vehicle commands
-  m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", 1);
-  m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
-  m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", 1);
-  m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", 1);
-  m_joy_enable_pub = create_publisher<std_msgs::msg::UInt8>("vehicle/joy_control_enable", 1);
+  m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", qos);
+  m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", qos);
+  m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", qos);
+  m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", qos);
+  m_joy_enable_pub = create_publisher<std_msgs::msg::UInt8>("vehicle/joy_control_enable", qos);
 
   // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
-    "joy", rclcpp::SensorDataQoS{},
+    "joy", qos,
     std::bind(&JoystickVehicleInterfaceNode::on_joy, this, std::placeholders::_1));
 
   // gear subscription
   m_gear_sub = create_subscription<deep_orange_msgs::msg::PtReport>(
-    "telemetry/pt_report", 1, 
+    "telemetry/pt_report", qos, 
     std::bind(&JoystickVehicleInterfaceNode::on_gear_rcv, this, std::placeholders::_1));
 
   // Maps
