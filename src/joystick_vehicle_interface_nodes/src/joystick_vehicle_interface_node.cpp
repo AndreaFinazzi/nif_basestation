@@ -92,7 +92,7 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   qos.best_effort();
 
   // basic functionality (trigger emergency stop and send heartbeat)
-  m_joystick_command = create_publisher<deep_orange_msgs::msg::JoystickCommand>("/joystick", qos);
+  m_joystick_command = create_publisher<deep_orange_msgs::msg::JoystickCommand>("/joystick/command", qos);
 
   // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
