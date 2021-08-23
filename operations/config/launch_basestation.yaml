@@ -25,8 +25,8 @@ windows:
       - echo "PING for 10.42.4.200 (ADLINK)"
       - ping 10.42.4.200
     - shell_command:
-      - echo "PING for 10.42.4.80 (SWITCH)"
-      - ping 10.42.4.80
+      - sleep 5
+      - ros2 topic echo /telemetry/pt_report deep_orange_msgs/msg/PtReport
     - shell_command:
       - sleep 5
       - ros2 topic echo /telemetry/misc_report_do deep_orange_msgs/msg/MiscReport
@@ -54,10 +54,4 @@ windows:
     - shell_command:
       - sleep 5
       - ros2 topic echo /vehicle/emergency_stop
-  - window_name: Car Diagnostics
-    layout: tiled
-    panes:
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /telemetry/pt_report
 
