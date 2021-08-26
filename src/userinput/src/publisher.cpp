@@ -14,11 +14,15 @@ class MinimalSubscriber : public rclcpp::Node
       timer_ = this->create_wall_timer(
       500ms, std::bind(&MinimalSubscriber::timer_callback, this));
       
+      // setup QOS to be best effort
+      auto qos = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 1));
+      qos.best_effort();
+      
       //########################################################
       //For RC flag input
       rc_subscriber = this->create_subscription<deep_orange_msgs::msg::RcToCt>(
       "rc_flag", 10, std::bind(&MinimalSubscriber::rc_callback, this, _1));
-      rc_publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("raptor_dbw_interface/rc_to_ct", 10);
+      rc_publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("raptor_dbw_interface/rc_to_ct", qos);
     }
 
   private:

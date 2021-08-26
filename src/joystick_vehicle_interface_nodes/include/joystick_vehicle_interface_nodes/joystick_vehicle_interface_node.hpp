@@ -18,9 +18,8 @@
 
 #include <joystick_vehicle_interface/joystick_vehicle_interface.hpp>
 #include <joystick_vehicle_interface_nodes/visibility_control.hpp>
-#include "std_msgs/msg/u_int8.hpp"
-#include "std_msgs/msg/float32.hpp"
 #include "deep_orange_msgs/msg/pt_report.hpp"
+#include "deep_orange_msgs/msg/joystick_command.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -54,17 +53,8 @@ private:
   JOYSTICK_VEHICLE_INTERFACE_NODES_LOCAL void on_joy(const sensor_msgs::msg::Joy::SharedPtr msg);
 
   // basic functionality
-  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_emergency_stop;
-  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_heartbeat;
-  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_joy_enable_pub;
-  std_msgs::msg::UInt8 msg_enable;
+  rclcpp::Publisher<deep_orange_msgs::msg::JoystickCommand>::SharedPtr m_joystick_command;
   unsigned int cnt = 0; 
-
-  // vehicle control
-  rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr m_gear_pub;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_accelerator_pub;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_steering_pub;
-  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr m_brake_pub;
 
   // vehicle feedback 
   rclcpp::Subscription<deep_orange_msgs::msg::PtReport>::SharedPtr m_gear_sub;
@@ -79,6 +69,7 @@ private:
   rclcpp::TimerBase::SharedPtr shift_sequence_timer;
   void shift_sequence_update();
   int shift_time_ms;
+  bool emergency_activated;
 
 };  // class JoystickVehicleInterfaceNode
 }  // namespace joystick_vehicle_interface_nodes

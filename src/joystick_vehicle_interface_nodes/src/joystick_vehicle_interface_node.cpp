@@ -84,25 +84,24 @@ JoystickVehicleInterfaceNode::JoystickVehicleInterfaceNode(
   check_set(button_map, Buttons::RECORDREPLAY_START_REPLAY, "buttons.recordreplay_start_replay");
   check_set(button_map, Buttons::RECORDREPLAY_STOP, "buttons.recordreplay_stop");
 
-  // basic functionality (trigger emergency stop and send heartbeat)
-  m_emergency_stop = create_publisher<std_msgs::msg::UInt8>("/emergency_stop", 1);
-  m_heartbeat = create_publisher<std_msgs::msg::UInt8>("/counter", 1);
+  // disable emergency
+  emergency_activated = false;
 
-  // output vehicle commands
-  m_gear_pub = create_publisher<std_msgs::msg::UInt8>("/gear_cmd", 1);
-  m_accelerator_pub = create_publisher<std_msgs::msg::Float32>("/accelerator_cmd", 1);
-  m_steering_pub = create_publisher<std_msgs::msg::Float32>("/steering_cmd", 1);
-  m_brake_pub = create_publisher<std_msgs::msg::Float32>("/brake_cmd", 1);
-  m_joy_enable_pub = create_publisher<std_msgs::msg::UInt8>("vehicle/joy_control_enable", 1);
+  // setup QOS to be best effort
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, 1));
+  qos.best_effort();
+
+  // basic functionality (trigger emergency stop and send heartbeat)
+  m_joystick_command = create_publisher<deep_orange_msgs::msg::JoystickCommand>("/joystick/command", qos);
 
   // Listen to joystick commands
   m_joy_sub = create_subscription<sensor_msgs::msg::Joy>(
-    "joy", rclcpp::SensorDataQoS{},
+    "joy", qos,
     std::bind(&JoystickVehicleInterfaceNode::on_joy, this, std::placeholders::_1));
 
   // gear subscription
   m_gear_sub = create_subscription<deep_orange_msgs::msg::PtReport>(
-    "telemetry/pt_report", 1, 
+    "telemetry/pt_report", qos, 
     std::bind(&JoystickVehicleInterfaceNode::on_gear_rcv, this, std::placeholders::_1));
 
   // Maps
@@ -134,21 +133,20 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
   const auto send4 = msg->buttons[5];
   if (send3 == 1 && send4 == 1)
   {
-    auto msg = std_msgs::msg::UInt8();
-    msg.data = 1;
-    m_emergency_stop->publish(msg);
+    emergency_activated = true; 
   }
-  // enable vehicle control 
+  // initialize joystick command message to be filled 
+  auto msg_send = deep_orange_msgs::msg::JoystickCommand();
+  // set emergency brake bit 
+  if(emergency_activated)
+  {
+    msg_send.emergency_stop = 1;
+  }
   const auto send7 = msg->axes[7];
   if(send7 == 1)
   {
-    msg_enable.data = 1;
+    msg_send.joy_enable = 1;
   }
-  else if(send7 == -1)
-  {
-    msg_enable.data = 0;
-  }
-  m_joy_enable_pub->publish(msg_enable);
 
   // update gear shifting and output
   m_core->update_state_command(*msg);
@@ -172,38 +170,31 @@ void JoystickVehicleInterfaceNode::on_joy(const sensor_msgs::msg::Joy::SharedPtr
         try_shifting = true; 
     }
   }
-  auto msg_gear = std_msgs::msg::UInt8(); 
-  msg_gear.data = desired_gear;
   // only publish after it has been initialized and the engine is running
   if(desired_gear >= 0 && engine_running)
   {
-    m_gear_pub->publish(msg_gear);
+    msg_send.gear_cmd = desired_gear; 
   }
   
   // output steering, throttle and brakes
-  auto msg_throttle = std_msgs::msg::Float32();
   double data = 0; 
   m_core->axis_value_throttle(*msg, Axes::THROTTLE, data);
-  msg_throttle.data = data;
-  m_accelerator_pub->publish(msg_throttle);
-  auto msg_brake = std_msgs::msg::Float32();
+  msg_send.accelerator_cmd = data;
   m_core->axis_value(*msg, Axes::BRAKE, data);
-  msg_brake.data = data;
-  m_brake_pub->publish(msg_brake);
-  auto msg_steering = std_msgs::msg::Float32();
+  msg_send.brake_cmd = data;
   m_core->axis_value_steer(*msg, Axes::FRONT_STEER, data);
-  msg_steering.data = data;
-  m_steering_pub->publish(msg_steering);
+  msg_send.steering_cmd = data;
 
   // publish heartbeat
-  auto msg_heartbeat = std_msgs::msg::UInt8();
   cnt++;
   if(cnt > 9)
   {
     cnt = 0;
   }
-  msg_heartbeat.data = cnt;
-  m_heartbeat->publish(msg_heartbeat);
+  msg_send.counter = cnt;
+
+  // finally publish
+  m_joystick_command->publish(msg_send);
 }
 
 void JoystickVehicleInterfaceNode::shift_sequence_update()
