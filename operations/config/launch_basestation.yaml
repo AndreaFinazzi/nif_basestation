@@ -21,20 +21,22 @@ windows:
     - shell_command:
       - /workspace/operations/scripts/remote_sensors_bagging.sh
   - window_name: Ping and State
-    layout: tiled
+    layout: main-horizontal
+    options:
+      main-pane-height: 20
     panes:
     - shell_command:
       - echo "PING for 10.42.4.200 (ADLINK)"
       - ping 10.42.4.200
     - shell_command:
       - sleep 5
-      - ros2 topic echo /telemetry/safety_status bvs_msgs/msg/SafetyStatus
-    - shell_command:
-      - sleep 5
       - ros2 topic echo /telemetry/misc_report_do deep_orange_msgs/msg/MiscReport
     - shell_command:
       - sleep 5
       - ros2 topic echo /telemetry/ct_report deep_orange_msgs/msg/CtReport
+    - shell_command:
+      - sleep 5
+      - ros2 topic echo /telemetry/safety_status bvs_msgs/msg/SafetyStatus
     - shell_command:
       - sleep 5
       - ros2 topic echo /telemetry/pt_report deep_orange_msgs/msg/PtReport
