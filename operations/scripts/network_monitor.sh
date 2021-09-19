@@ -7,6 +7,6 @@ mkdir -p /home/$USER/network-monitor-recordings
 echo 'Monitoring network stats at '
 echo $LOG_FILE
 
-ifstat -t -i eth0 0.5 &> $LOG_FILE
+ifstat -t -i enp62s0 0.5 &> $LOG_FILE
 
 wait

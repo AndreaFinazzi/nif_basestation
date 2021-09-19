@@ -1,19 +1,19 @@
-#include <deep_orange_msgs/msg/rc_to_ct.hpp>
+#include "deep_orange_msgs/msg/base_to_car_summary.hpp"
 #include <stdio.h>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float32.hpp"
 using namespace std::chrono_literals;
-using deep_orange_msgs::msg::RcToCt;
+using deep_orange_msgs::msg::BaseToCarSummary;
 class RCFlagInput : public rclcpp::Node
 {
   public:
     RCFlagInput()
     : Node("rcflag_publisher")
     {
-      publisher_ = this->create_publisher<deep_orange_msgs::msg::RcToCt>("/rc_flag", 10);
+      publisher_ = this->create_publisher<deep_orange_msgs::msg::BaseToCarSummary>("/rc_flag", 10);
       timer_ = this->create_wall_timer(
-      500ms, std::bind(&RCFlagInput::timer_callback, this));
+      1s, std::bind(&RCFlagInput::timer_callback, this));
     }
 
   private:
@@ -23,8 +23,8 @@ class RCFlagInput : public rclcpp::Node
       unsigned int rcflag;
       // bool confirm;
       unsigned int vehcond;
-      auto RaceControlFlag = deep_orange_msgs::msg::RcToCt();
-      std::cout << "Enter RC flag input [1-4] [1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
+      auto flag_summary = deep_orange_msgs::msg::BaseToCarSummary();
+      std::cout << "Enter RC flag input [0-4] [0 - null, 1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
       std::cin >> rcflag;
       std::string confirmation_race_flag = "oogabooga";
       while (!(confirmation_race_flag.compare("Y")==0 || confirmation_race_flag.compare("n")==0))
@@ -43,12 +43,12 @@ class RCFlagInput : public rclcpp::Node
       }
       
       
-      if(rcflag>4 || rcflag< 1){
+      if( rcflag > 4 || rcflag < 0 ){
         throw std::domain_error{"Invalid Race flag"};
       }
-      RaceControlFlag.track_cond = rcflag;
+      flag_summary.track_flag = rcflag;
 
-      std::cout << "Enter vehicle flag: [0 - null, 1 - checkered, 2 - black, 3 - purple ]";
+      std::cout << "Enter vehicle flag: [0 - null, 1 - checkered, 2 - black, 8 - purple ]";
       std::cin >> vehcond;
       std::string confirmation_vehicle_flag = "oogabooga";
       while (!(confirmation_vehicle_flag.compare("Y")==0 || confirmation_vehicle_flag.compare("n")==0))
@@ -66,32 +66,24 @@ class RCFlagInput : public rclcpp::Node
         return;
       }
       if(vehcond == 1){
-        RaceControlFlag.black = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-        RaceControlFlag.checkered = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true};
-        RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+        flag_summary.veh_flag = 1;
       }
       else if(vehcond == 2){
-        RaceControlFlag.black = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true};
-        RaceControlFlag.checkered = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-        RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+        flag_summary.veh_flag = 2;
       }
-      else if(vehcond == 3){
-        RaceControlFlag.black = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-        RaceControlFlag.checkered = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-        RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true};
+      else if(vehcond == 8){
+        flag_summary.veh_flag = 8;
       }
       else{
-         RaceControlFlag.black = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-         RaceControlFlag.checkered = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
-         RaceControlFlag.purple = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
+        flag_summary.veh_flag = 0;
       }
     
-      RCLCPP_INFO(this->get_logger(), "Publishing race flag: '%u', vehicle flag: '%u'", RaceControlFlag.track_cond, vehcond);
-      publisher_->publish(RaceControlFlag);
+      RCLCPP_INFO(this->get_logger(), "Publishing race flag: '%u', vehicle flag: '%u'", flag_summary.track_flag, vehcond);
+      publisher_->publish(flag_summary);
       
     }
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<deep_orange_msgs::msg::RcToCt>::SharedPtr publisher_;
+    rclcpp::Publisher<deep_orange_msgs::msg::BaseToCarSummary>::SharedPtr publisher_;
     // size_t count_;
 };
 

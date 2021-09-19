@@ -3,6 +3,7 @@ builtin_interfaces/Time stamp
 # status flags
 bool gps_healthy
 bool comms_healthy
+bool path_healthy
 bool joy_emergency
 
 # debug flags

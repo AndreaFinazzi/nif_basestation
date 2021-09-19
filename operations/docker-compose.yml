@@ -20,6 +20,8 @@ services:
             - ${IAC_BASESTATION_ROOT}/src/joystick_vehicle_interface_nodes:/workspace/src/joystick_vehicle_interface_nodes
             - ${IAC_BASESTATION_ROOT}/src/userinput:/workspace/src/userinput
             - ${IAC_BASESTATION_ROOT}/src/bvs_msgs:/workspace/src/bvs_msgs
+            - ${IAC_BASESTATION_ROOT}/src/deep_orange_msgs:/workspace/src/deep_orange_msgs
+            - ${IAC_BASESTATION_ROOT}/src/nif_msgs:/workspace/src/nif_msgs
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
