@@ -32,13 +32,15 @@ RUN apt update \
 # RUN git clone --branch master https://gitlab.com/IACBaseSoftware/deep_orange_msgs.git /workspace/src/deep_orange_msgs
 RUN git clone https://gitlab.com/IACBaseSoftware/raptor-dbw-ros2.git /workspace/src/raptor-dbw-ros2
 
+RUN apt install -y ros-foxy-vision-msgs
+
 # Setup Bashrc
 RUN echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc
 RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 RUN echo "export CYCLONEDDS_URI=file:///etc/cyclone/cyclonedds.xml" >> ~/.bashrc
 RUN echo "export CYCLONE_INCLUDE=/opt/ros/foxy/include" >> ~/.bashrc
 RUN echo "export CYCLONE_LIB=/opt/ros/foxy/lib/x86_64-linux-gnu" >> ~/.bashrc
-RUN echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
+RUN echo "export ROS_DOMAIN_ID=69" >> ~/.bashrc
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> ~/.bashrc
 RUN echo "source /workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "alias e_shutdown='/workspace/install/shutdown.sh'" >> ~/.bashrc

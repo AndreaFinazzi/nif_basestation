@@ -28,6 +28,8 @@ set(msg_files
     "msg/ControlCommand.msg"
     "msg/FilterOut.msg"
     "msg/SystemHealthStatus.msg"
+    "msg/Perception3D.msg"
+    "msg/Perception3DArray.msg"
     "msg/PowertrainStatus.msg"
     "msg/SystemStatus.msg"
     "msg/TerrainStatus.msg"
@@ -35,7 +37,8 @@ set(msg_files
     "msg/WatchDogStatus.msg"
     "msg/Waypoints.msg"
     "msg/WaypointsArray.msg"
-    "msg/NodeStatus.msg"
+        "msg/NodeStatusShort.msg"
+        "msg/NodeStatus.msg"
         "msg/MissionStatus.msg"
 )
 
@@ -46,7 +49,7 @@ set(srv_files
 rosidl_generate_interfaces(${PROJECT_NAME}
         ${msg_files}
         ${srv_files}
-        DEPENDENCIES builtin_interfaces geometry_msgs nav_msgs std_msgs
+        DEPENDENCIES builtin_interfaces geometry_msgs nav_msgs std_msgs vision_msgs
         )
 
 

@@ -6,7 +6,7 @@
 string[] node_list
 
 # nodes status list
-NodeStatus[] node_statuses_list
+NodeStatusShort[] node_statuses_list
 
 # system failure flag
 bool system_failure false
