@@ -1,12 +1,12 @@
 version: '2.0'
 services:
-    iac_basestation:
-        image: iacteams/basestation:latest
+    nifbasestation:
+        image: nif/basestation:latest
         build:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
           dockerfile: ${IAC_BASESTATION_ROOT}/operations/dockerfiles/basestation.Dockerfile
-        container_name: iac_basestation
+        container_name: nifbasestation
         tty: true
         network_mode: "host"
         privileged: true
@@ -25,3 +25,4 @@ services:
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
+            - ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds

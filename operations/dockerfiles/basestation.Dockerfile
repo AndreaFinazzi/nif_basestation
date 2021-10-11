@@ -16,6 +16,7 @@ RUN apt install -y ros-foxy-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
 # https://github.com/eclipse-zenoh/zenoh-plugin-dds
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN apt install -y llvm-dev libclang-dev
+RUN echo force rebuild!
 RUN git clone --branch IAC https://github.com/eclipse-zenoh/zenoh-plugin-dds
 RUN cd zenoh-plugin-dds && /root/.cargo/bin/cargo build --release
 RUN cp zenoh-plugin-dds/target/release/zenoh-bridge-dds /usr/bin
@@ -40,7 +41,7 @@ RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 RUN echo "export CYCLONEDDS_URI=file:///etc/cyclone/cyclonedds.xml" >> ~/.bashrc
 RUN echo "export CYCLONE_INCLUDE=/opt/ros/foxy/include" >> ~/.bashrc
 RUN echo "export CYCLONE_LIB=/opt/ros/foxy/lib/x86_64-linux-gnu" >> ~/.bashrc
-RUN echo "export ROS_DOMAIN_ID=69" >> ~/.bashrc
+RUN echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
 RUN echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/" >> ~/.bashrc
 RUN echo "source /workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "alias e_shutdown='/workspace/install/shutdown.sh'" >> ~/.bashrc

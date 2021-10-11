@@ -1,4 +1,4 @@
-session_name: iac_basestation_launch
+session_name: nifbasestation_launch
 windows:
   - window_name: Joystick Launch
     layout: tiled
@@ -13,9 +13,9 @@ windows:
     layout: tiled
     panes:
     - shell_command:
-      - ros2 run userinput ui_raceflag
+      - # ros2 run userinput ui_raceflag
     - shell_command:
-      - ros2 run userinput ui_publisher
+      - # ros2 run userinput ui_publisher
     - shell_command:
       - /workspace/operations/scripts/remote_spoof_spawn.sh
     - shell_command:
@@ -34,9 +34,6 @@ windows:
     - shell_command:
       - sleep 5
       - ros2 topic echo /telemetry/ct_report deep_orange_msgs/msg/CtReport
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /telemetry/safety_status bvs_msgs/msg/SafetyStatus
     - shell_command:
       - sleep 5
       - ros2 topic echo /telemetry/system_status nif_msgs/msg/SystemStatus

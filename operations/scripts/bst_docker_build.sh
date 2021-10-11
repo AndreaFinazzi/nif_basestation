@@ -5,4 +5,4 @@ __file_name="$(basename "${BASH_SOURCE[0]}")"
 __call_dir=$(pwd)
 
 export IAC_BASESTATION_ROOT=$__dir/../../
-docker-compose -f $IAC_BASESTATION_ROOT/operations/docker-compose.yml build --force-rm iac_basestation
+docker-compose -f $IAC_BASESTATION_ROOT/operations/docker-compose.yml build --force-rm nifbasestation

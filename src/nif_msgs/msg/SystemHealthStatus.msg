@@ -9,13 +9,13 @@ string[] node_list
 NodeStatusShort[] node_statuses_list
 
 # system failure flag
-bool system_failure false
+bool system_failure true
 
 # Communications status flag
-bool communication_failure false
+bool communication_failure true
 
 # Localization status flag
-bool localization_failure false
+bool localization_failure true
 
 #
 bool commanded_stop false
