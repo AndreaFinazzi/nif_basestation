@@ -344,10 +344,10 @@ class Visualiser(Node):
         self.ln1o.set_data(self.y_out_data, self.x_out_data)
         return self.ln1o
     def update_plot1y(self, frame):
-        self.ln1o.set_data(self.y_pit_in_data, self.x_pit_in_data)
+        self.ln1y.set_data(self.y_pit_in_data, self.x_pit_in_data)
         return self.ln1y
     def update_plot1t(self, frame):
-        self.ln1o.set_data(self.y_pit_out_data, self.x_pit_out_data)
+        self.ln1t.set_data(self.y_pit_out_data, self.x_pit_out_data)
         return self.ln1t        
         
     def update_plot2b(self, frame):
@@ -359,7 +359,8 @@ class Visualiser(Node):
         self.ln2o, = self.ax2.plot([], [], 'g-')
         self.ln2p, = self.ax2.plot([], [], 'b-')
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw*180/3.1415), markersize=10, color='blue')
-
+        self.ln2y, = self.ax2.plot([], [], 'k-')
+        self.ln2t, = self.ax2.plot([], [], 'k-')
         self.ax2.axis([self.y-50, self.y+50, self.x-100, self.x+100])
         self.ax2.invert_xaxis()
         self.ln2b.set_data(self.y_data, self.x_data)
@@ -396,10 +397,10 @@ class Visualiser(Node):
         self.ln2p.set_data(self.y_pred_data, self.x_pred_data)
         return self.ln2p
     def update_plot2y(self, frame):
-        self.ln2p.set_data(self.y_pit_in_data, self.x_pit_in_data)
+        self.ln2y.set_data(self.y_pit_in_data, self.x_pit_in_data)
         return self.ln2y
     def update_plot2t(self, frame):
-        self.ln2p.set_data(self.y_pit_out_data, self.x_pit_out_data)
+        self.ln2t.set_data(self.y_pit_out_data, self.x_pit_out_data)
         return self.ln2t        
 fig, (ax1, ax2) = plt.subplots(1,2)
 

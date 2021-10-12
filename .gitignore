@@ -3,3 +3,5 @@ install/
 log/
 .vscode
 20210706_lor_iac-dev_rtk_0.db3
+
+__pycache__/

@@ -6,7 +6,7 @@ services:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
           dockerfile: ${IAC_BASESTATION_ROOT}/operations/dockerfiles/basestation.Dockerfile
-        runtime: nvidia 
+        #runtime: nvidia 
         container_name: nifbasestation
         tty: true
         network_mode: "host"
