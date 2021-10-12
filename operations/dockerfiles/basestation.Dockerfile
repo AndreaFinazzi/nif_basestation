@@ -33,7 +33,9 @@ RUN apt update \
 # RUN git clone --branch master https://gitlab.com/IACBaseSoftware/deep_orange_msgs.git /workspace/src/deep_orange_msgs
 RUN git clone https://gitlab.com/IACBaseSoftware/raptor-dbw-ros2.git /workspace/src/raptor-dbw-ros2
 
-RUN apt install -y ros-foxy-vision-msgs
+RUN apt install -y ros-foxy-vision-msgs ros-foxy-tf-transformations
+RUN apt install -y python3-pip
+RUN pip install -y matplotlib transforms3d
 
 # Setup Bashrc
 RUN echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc
