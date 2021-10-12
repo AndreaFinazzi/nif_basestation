@@ -37,14 +37,21 @@ class Visualiser(Node):
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw))
         self.ln1i, = self.ax1.plot([], [], 'r-')
         self.ln1o, = self.ax1.plot([], [], 'g-')
+        self.ln1y, = self.ax1.plot([], [], 'k-')
+        self.ln1t, = self.ax1.plot([], [], 'k-')
+                        
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw))
         self.ln2i, = self.ax2.plot([], [], 'r-')
         self.ln2o, = self.ax2.plot([], [], 'g-')
         self.ln2p, = self.ax2.plot([], [], 'b-')
+        self.ln2y, = self.ax2.plot([], [], 'k-')
+        self.ln2t, = self.ax2.plot([], [], 'k-')                
         self.x_data, self.y_data = [] , []
         self.x_in_data, self.y_in_data = [] , []
         self.x_out_data, self.y_out_data = [] , []
         self.x_pred_data, self.y_pred_data = [] , []
+        self.x_pit_in_data, self.y_pit_in_data = [] , []
+        self.x_pit_out_data, self.y_pit_out_data = [] , []                        
         self.cnt=0
         self.gps_code_color = 'black'
 
@@ -68,7 +75,24 @@ class Visualiser(Node):
             self.cnt=1
         f.close()
         self.cnt=0
-
+        f = open('/workspace/src/py_pubsub/py_pubsub/lor_pit_inner_wpt.csv','r')
+        rdr = csv.reader(f)
+        for line in rdr:
+            if (self.cnt!=0):
+                self.x_pit_in_data.append(float(line[0])+self.x_bias)
+                self.y_pit_in_data.append(float(line[1]))
+            self.cnt=1
+        f.close()
+        self.cnt=0
+        f = open('/workspace/src/py_pubsub/py_pubsub/lor_pit_outer_wpt.csv','r')
+        rdr = csv.reader(f)
+        for line in rdr:
+            if (self.cnt!=0):
+                self.x_pit_out_data.append(float(line[0])+self.x_bias)
+                self.y_pit_out_data.append(float(line[1]))
+            self.cnt=1
+        f.close()
+        self.cnt=0        
     def plot_init1b(self):
        
         # self.ax1.set_xlim(-850,850)
@@ -105,6 +129,28 @@ class Visualiser(Node):
         self.ax1.spines['top'].set_color('none')
         self.ax1.invert_xaxis()
         return self.ln1o
+    def plot_init1y(self):
+        # self.ax1.set_xlim(-850,850)
+        # self.ax1.set_ylim(-850,850)
+        self.ax1.set_xlim(-250,50)
+        self.ax1.set_ylim(-250,250)                
+        self.ax1.spines['left'].set_position('zero')
+        self.ax1.spines['right'].set_color('none')
+        self.ax1.spines['bottom'].set_position('zero')
+        self.ax1.spines['top'].set_color('none')
+        self.ax1.invert_xaxis()
+        return self.ln1y
+    def plot_init1t(self):
+        # self.ax1.set_xlim(-850,850)
+        # self.ax1.set_ylim(-850,850)
+        self.ax1.set_xlim(-250,50)
+        self.ax1.set_ylim(-250,250)                
+        self.ax1.spines['left'].set_position('zero')
+        self.ax1.spines['right'].set_color('none')
+        self.ax1.spines['bottom'].set_position('zero')
+        self.ax1.spines['top'].set_color('none')
+        self.ax1.invert_xaxis()
+        return self.ln1t               
 
     def plot_init2b(self):
         self.ax2.set_xlim(-850,850)
@@ -144,7 +190,25 @@ class Visualiser(Node):
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         self.ax2.invert_xaxis()
-        return self.ln2p    
+        return self.ln2p
+    def plot_init2y(self):
+        self.ax2.set_xlim(-850,850)
+        self.ax2.set_ylim(-850,850)
+        self.ax2.spines['left'].set_position('zero')
+        self.ax2.spines['right'].set_color('none')
+        self.ax2.spines['bottom'].set_position('zero')
+        self.ax2.spines['top'].set_color('none')
+        self.ax2.invert_xaxis()
+        return self.ln2y   
+    def plot_init2t(self):
+        self.ax2.set_xlim(-850,850)
+        self.ax2.set_ylim(-850,850)
+        self.ax2.spines['left'].set_position('zero')
+        self.ax2.spines['right'].set_color('none')
+        self.ax2.spines['bottom'].set_position('zero')
+        self.ax2.spines['top'].set_color('none')
+        self.ax2.invert_xaxis()
+        return self.ln2t                       
 
     def getYaw(self, pose):
         quaternion = (pose.orientation.x, pose.orientation.y, pose.orientation.z,
@@ -185,7 +249,7 @@ class Visualiser(Node):
         print("tele_callback")
         self.x_pred_data=[]
         self.y_pred_data=[]
-        self.steering = msg.control.steering_cmd * 3.141592/180
+        self.steering = msg.kinematic.steering_wheel_angle_deg/9.5 * 3.141592/180
         if (self.steering==0):
             self.radius = self.max
         else:
@@ -279,7 +343,13 @@ class Visualiser(Node):
     def update_plot1o(self, frame):
         self.ln1o.set_data(self.y_out_data, self.x_out_data)
         return self.ln1o
-
+    def update_plot1y(self, frame):
+        self.ln1o.set_data(self.y_pit_in_data, self.x_pit_in_data)
+        return self.ln1y
+    def update_plot1t(self, frame):
+        self.ln1o.set_data(self.y_pit_out_data, self.x_pit_out_data)
+        return self.ln1t        
+        
     def update_plot2b(self, frame):
         self.ln2b.remove()
         self.ax2.clear()
@@ -325,17 +395,26 @@ class Visualiser(Node):
     def update_plot2p(self, frame):
         self.ln2p.set_data(self.y_pred_data, self.x_pred_data)
         return self.ln2p
-
+    def update_plot2y(self, frame):
+        self.ln2p.set_data(self.y_pit_in_data, self.x_pit_in_data)
+        return self.ln2y
+    def update_plot2t(self, frame):
+        self.ln2p.set_data(self.y_pit_out_data, self.x_pit_out_data)
+        return self.ln2t        
 fig, (ax1, ax2) = plt.subplots(1,2)
 
 vis = Visualiser()
 ani1b = FuncAnimation(vis.fig, vis.update_plot1b, init_func=vis.plot_init1b)
 ani1i = FuncAnimation(vis.fig, vis.update_plot1i, init_func=vis.plot_init1i)
 ani1o = FuncAnimation(vis.fig, vis.update_plot1o, init_func=vis.plot_init1o)
+ani1y = FuncAnimation(vis.fig, vis.update_plot1y, init_func=vis.plot_init1y)
+ani1t = FuncAnimation(vis.fig, vis.update_plot1t, init_func=vis.plot_init1t)
 ani2b = FuncAnimation(vis.fig, vis.update_plot2b, init_func=vis.plot_init2b)
 ani2i = FuncAnimation(vis.fig, vis.update_plot2i, init_func=vis.plot_init2i)
 ani2o = FuncAnimation(vis.fig, vis.update_plot2o, init_func=vis.plot_init2o)
 ani2p = FuncAnimation(vis.fig, vis.update_plot2p, init_func=vis.plot_init2p)
+ani2y = FuncAnimation(vis.fig, vis.update_plot2y, init_func=vis.plot_init2y)
+ani2t = FuncAnimation(vis.fig, vis.update_plot2t, init_func=vis.plot_init2t)
 vis.ax1.axis('scaled')
 vis.ax2.axis('scaled')
 vis.ax1.axis('off')
