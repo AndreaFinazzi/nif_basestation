@@ -185,7 +185,8 @@ class Visualiser(Node):
         print("tele_callback")
         self.x_pred_data=[]
         self.y_pred_data=[]
-        self.steering = msg.control.steering_cmd * 3.141592/180
+        # self.steering = msg.control.steering_cmd * 3.141592/180
+        self.steering = msg.kinematic.steering_wheel_angle_deg /9.5 * 3.141592/180
         if (self.steering==0):
             self.radius = self.max
         else:
