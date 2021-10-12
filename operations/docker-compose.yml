@@ -22,7 +22,8 @@ services:
             - ${IAC_BASESTATION_ROOT}/src/bvs_msgs:/workspace/src/bvs_msgs
             - ${IAC_BASESTATION_ROOT}/src/deep_orange_msgs:/workspace/src/deep_orange_msgs
             - ${IAC_BASESTATION_ROOT}/src/nif_msgs:/workspace/src/nif_msgs
+            - ${IAC_BASESTATION_ROOT}/src/py_pubsub:/workspace/src/py_pubsub
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
-            - ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds
+            #- ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds
