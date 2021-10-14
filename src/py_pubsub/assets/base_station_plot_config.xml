@@ -27,7 +27,7 @@
         <plot mode="TimeSeries" style="Lines">
          <range top="6.714645" right="164.403583" bottom="6.713318" left="144.504408"/>
          <limitY/>
-         <curve name="/nif_telemetry/telemetry/control/lateral_error" color="#1ac938"/>
+         <curve name="/nif_telemetry/telemetry/control/crosstrack_error" color="#1ac938"/>
         </plot>
        </DockArea>
        <DockArea name="STEER CMD / ANGLE">
