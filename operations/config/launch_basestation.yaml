@@ -13,30 +13,26 @@ windows:
     layout: tiled
     panes:
     - shell_command:
-      - # ros2 run userinput ui_raceflag
+      # - # ros2 run userinput ui_raceflag
+      - ros2 run plotjuggler plotjuggler -l src/py_pubsub/assets/base_station_plot_config.xml
     - shell_command:
-      - # ros2 run userinput ui_publisher
+      # - # ros2 run userinput ui_publisher
+      - ros2 run py_pubsub plot 
     - shell_command:
-      - /workspace/operations/scripts/remote_spoof_spawn.sh
+      # - /workspace/operations/scripts/remote_spoof_spawn.sh
     - shell_command:
-      - /workspace/operations/scripts/remote_sensors_bagging.sh
+      # - /workspace/operations/scripts/remote_sensors_bagging.sh
   - window_name: Ping and State
-    layout: main-horizontal
+    layout: even-horizontal
     options:
-      main-pane-height: 20
+      main-pane-height: 7
     panes:
     - shell_command:
       - echo "PING for 10.42.4.200 (ADLINK)"
       - ping 10.42.4.200
     - shell_command:
       - sleep 5
-      - ros2 topic echo /telemetry/misc_report_do deep_orange_msgs/msg/MiscReport
+      - ros2 topic echo /nif_telemetry/telemetry nif_msgs/msg/Telemetry
     - shell_command:
       - sleep 5
-      - ros2 topic echo /telemetry/ct_report deep_orange_msgs/msg/CtReport
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /telemetry/system_status nif_msgs/msg/SystemStatus
-    - shell_command:
-      - sleep 5
-      - ros2 topic echo /telemetry/pt_report deep_orange_msgs/msg/PtReport
+      - ros2 topic echo /nif_telemetry/system_status nif_msgs/msg/SystemStatus
