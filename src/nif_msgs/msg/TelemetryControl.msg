@@ -14,4 +14,4 @@ uint8 gear_cmd
 
 float32 desired_velocity_mps
 
-float32 lateral_error
+float32 crosstrack_error
