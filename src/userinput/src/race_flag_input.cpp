@@ -43,7 +43,7 @@ class RCFlagInput : public rclcpp::Node
       }
       
       
-      if( rcflag > 4 || rcflag < 0 ){
+      if( rcflag > 4 || rcflag < 0 ) {
         throw std::domain_error{"Invalid Race flag"};
       }
       flag_summary.track_flag = rcflag;

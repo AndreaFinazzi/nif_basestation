@@ -51,6 +51,7 @@ class MinimalSubscriber : public rclcpp::Node
       RCInfo.black = black;
       RCInfo.checkered = checkered;
       RCInfo.purple = purple;
+      RCInfo.rolling_counter = hb;
       old_rc_publisher_->publish(RCInfo);
 
       if (hb > 7) hb = 0;

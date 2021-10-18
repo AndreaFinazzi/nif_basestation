@@ -1,0 +1,9 @@
+nif_msgs/TelemetryMiscReport misc_report
+
+nif_msgs/TelemetryPtReport pt_report
+
+nif_msgs/TelemetryLocalization localization
+
+nif_msgs/TelemetryControl control
+
+nif_msgs/TelemetryKinematic kinematic

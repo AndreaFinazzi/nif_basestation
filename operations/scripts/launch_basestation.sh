@@ -9,6 +9,6 @@ export IAC_BASESTATION_ROOT=$__dir/../../
 network_monitor.sh &
 
 docker exec --privileged -e DISPLAY=${DISPLAY} -e LINES=`tput lines` \
-        -w "/workspace" -it iac_basestation /bin/tmuxp load /workspace/operations/config/launch_basestation.yaml
+        -w "/workspace" -it nifbasestation_sim /bin/tmuxp load /workspace/operations/config/launch_basestation.yaml
 
 wait

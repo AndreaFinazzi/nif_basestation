@@ -40,7 +40,7 @@ def generate_launch_description():
         package='joy',
         node_executable='joy_node',
         output='screen', 
-        parameters=[{'autorepeat_rate': 100.0}])
+        parameters=[{'autorepeat_rate': 30.0}])
 
     # joystick translator node
     joy_translator = launch_ros.actions.Node(

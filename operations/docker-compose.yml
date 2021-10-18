@@ -1,12 +1,12 @@
 version: '2.0'
 services:
-    iac_basestation:
-        image: iacteams/basestation:latest
+    nifbasestation_sim:
+        image: iacteams/basestation:nif
         build:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
           dockerfile: ${IAC_BASESTATION_ROOT}/operations/dockerfiles/basestation.Dockerfile
-        container_name: iac_basestation
+        container_name: nifbasestation_sim
         tty: true
         network_mode: "host"
         privileged: true

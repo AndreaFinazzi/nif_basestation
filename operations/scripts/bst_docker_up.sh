@@ -5,6 +5,6 @@ __file_name="$(basename "${BASH_SOURCE[0]}")"
 __call_dir=$(pwd)
 
 export IAC_BASESTATION_ROOT=$__dir/../../
-docker-compose -f $IAC_BASESTATION_ROOT/operations/docker-compose.yml up --force-recreate -d iac_basestation
-docker exec --privileged -w "/workspace" -it iac_basestation \
+docker-compose -f $IAC_BASESTATION_ROOT/operations/docker-compose.yml up --force-recreate -d nifbasestation_sim
+docker exec --privileged -w "/workspace" -it nifbasestation_sim \
     /bin/bash -i -c 'colcon build --packages-select nif_msgs deep_orange_msgs bvs_msgs raptor_dbw_msgs joystick_vehicle_interface joystick_vehicle_interface_nodes userinput'
