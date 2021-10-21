@@ -1,6 +1,7 @@
 version: '2.4'
 services:
     nifbasestation_sim:
+        runtime: nvidia
         image: nif/basestation:sim
         build:
           # docker build context

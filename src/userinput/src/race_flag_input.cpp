@@ -23,6 +23,7 @@ class RCFlagInput : public rclcpp::Node
       unsigned int rcflag;
       // bool confirm;
       unsigned int vehcond;
+      unsigned int lap_count;
       auto flag_summary = deep_orange_msgs::msg::BaseToCarSummary();
       std::cout << "Enter RC flag input [0-4] [0 - null, 1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
       std::cin >> rcflag;
@@ -77,6 +78,10 @@ class RCFlagInput : public rclcpp::Node
       else{
         flag_summary.veh_flag = 0;
       }
+    
+      std::cout << "Enter lap_count";
+      std::cin >> lap_count;
+      flag_summary.lap_count = lap_count;
     
       RCLCPP_INFO(this->get_logger(), "Publishing race flag: '%u', vehicle flag: '%u'", flag_summary.track_flag, vehcond);
       publisher_->publish(flag_summary);

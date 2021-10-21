@@ -27,6 +27,7 @@ class MinimalSubscriber : public rclcpp::Node
     unsigned short int hb = 0;
     unsigned short int rcflag = 1;
     unsigned short int vehflag = 0;
+    unsigned short int lap_count = 0;
 
     std::array<bool, 16> old_flag_true = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true};
     std::array<bool, 16> old_flag_false = {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false};
@@ -44,6 +45,7 @@ class MinimalSubscriber : public rclcpp::Node
       flag_summary.track_flag = rcflag;
       flag_summary.veh_flag = vehflag;
       flag_summary.base_to_car_heartbeat = hb++;
+      flag_summary.lap_count = lap_count;
       rc_publisher_->publish(flag_summary);
 
       auto RCInfo = deep_orange_msgs::msg::RcToCt();
@@ -65,7 +67,7 @@ class MinimalSubscriber : public rclcpp::Node
     {
       rcflag = msg->track_flag;
       vehflag = msg->veh_flag;
-
+      lap_count = msg->lap_count;
       switch (vehflag) 
       {
         case 1:
@@ -92,7 +94,7 @@ class MinimalSubscriber : public rclcpp::Node
           purple = old_flag_false;
       }
 
-      RCLCPP_INFO(this->get_logger(), "Track Condition: '%u' \t Vehicle Flag: '%u'", rcflag, vehflag);
+      RCLCPP_INFO(this->get_logger(), "Track Condition: '%u' \t Vehicle Flag: '%u'  \t Lap Count: '%u'", rcflag, vehflag, lap_count);
     }
 
     rclcpp::Subscription<deep_orange_msgs::msg::BaseToCarSummary>::SharedPtr rc_subscriber;

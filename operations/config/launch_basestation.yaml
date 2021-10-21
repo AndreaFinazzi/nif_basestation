@@ -13,17 +13,13 @@ windows:
     layout: tiled
     panes:
     - shell_command:
-      # - # ros2 run userinput ui_raceflag
       - ros2 run plotjuggler plotjuggler -l src/py_pubsub/assets/base_station_plot_config.xml
     - shell_command:
-      # - # ros2 run userinput ui_publisher
       - ros2 run py_pubsub plot 
     - shell_command:
-      - echo Empty shell
-      # - /workspace/operations/scripts/remote_spoof_spawn.sh
+      - ros2 run userinput ui_raceflag
     - shell_command:
-      - echo Empty shell
-      # - /workspace/operations/scripts/remote_sensors_bagging.sh
+      - ros2 run userinput ui_publisher
   - window_name: Ping and State
     layout: even-horizontal
     options:
