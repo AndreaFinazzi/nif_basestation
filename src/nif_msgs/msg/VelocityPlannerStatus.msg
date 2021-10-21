@@ -7,7 +7,10 @@ builtin_interfaces/Time stamp
 # Velocity planner status
 bool valid_path
 bool valid_odom
+
 float64 max_vel_mps
+float64 vel_curv_mps
+float64 vel_dyn_mps
 
 float64 curvature
 float64 a_lat_max
