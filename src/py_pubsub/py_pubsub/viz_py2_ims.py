@@ -6,6 +6,7 @@ from nav_msgs.msg import Path
 from std_msgs.msg import Float32
 from std_msgs.msg import Bool
 from nif_msgs.msg import Telemetry
+from nif_msgs.msg import SystemStatus
 from rclpy.qos import qos_profile_sensor_data
 from visualization_msgs.msg import MarkerArray
 
@@ -20,9 +21,10 @@ import math
 
 class Visualiser(Node):
     def __init__(self):      
-        self.range =np.pi
+        self.range =np.pi/5
         self.x_pred=0
         self.y_pred=0
+        self.desired_speed=0
         self.incre=0.05
         self.steering=0
         self.radius=0
@@ -71,8 +73,10 @@ class Visualiser(Node):
         self.CO_idx_n = 0
         self.min_dist_O = 99999
         self.error_O = 99999
+        self.wall_dist_sensing = 0
         self.gps_code_color = 'black'
-        self.lateral_error =0
+        self.lateral_error = 0
+        self.mission_code = 0
 
         f = open('/workspace/src/py_pubsub/py_pubsub/ims_inner_211004_cy_modified_wpt.csv','r')
         # f = open('/workspace/src/py_pubsub/py_pubsub/lor_inner_dense_211005_wpt.csv','r')
@@ -290,7 +294,7 @@ class Visualiser(Node):
         return yaw
                     
     def path_callback(self, msg):
-        print("path_callback")
+        # print("path_callback")
         self.x_path_data=[]
         self.y_path_data=[]
         for i in range(np.size(msg.poses)):
@@ -298,7 +302,7 @@ class Visualiser(Node):
             self.y_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
 
     def tele_callback(self, msg):
-        print("tele_callback")
+        # print("tele_callback")
         self.x_pred_data=[]
         self.y_pred_data=[]
         self.steering = msg.kinematic.steering_wheel_angle_deg/9.5 * 3.141592/180
@@ -372,9 +376,10 @@ class Visualiser(Node):
         self.plotEOP_y.append(self.y)
         # self.plotEOP_y.append(m2*(self.x+5)+d2)
         self.plotEOP_y.append(self.py)
-        print(round(self.error_O,4))
-        print(round(((self.x-self.px)**2+(self.y-self.py)**2)**0.5,4))
-
+        # print(round(self.error_O,4))
+        # print(round(((self.x-self.px)**2+(self.y-self.py)**2)**0.5,4))
+        #SPEED_Desired
+        self.desired_speed = round(msg.control.desired_velocity_mps,3)
         #SPEED
         self.speed = round(msg.kinematic.wheel_speed_mps,3)
 
@@ -389,8 +394,14 @@ class Visualiser(Node):
         else:
             self.gps_code_color = 'red'
 
+        #WALL DIST
+        self.wall_dist_sensing = msg.localization.detected_outer_distance
+
         #FLUSH
         fig.canvas.flush_events()
+
+    def system_callback(self,msg):
+        self.mission_code = msg.mission_status.mission_status_code
 
     def marker_callback(self, msg):
         self.obs_x = []
@@ -401,7 +412,11 @@ class Visualiser(Node):
 
     def update_plot1b(self, frame):
         self.ln1b.remove()
+        # self.ax1.clear()
+        # self.ax1.axis('off')
+        # self.ax1.axis('scaled')          
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=20, color='blue')
+              
         self.ln1b.set_data(self.x_data, self.y_data)
         return self.ln1b
 
@@ -439,25 +454,88 @@ class Visualiser(Node):
         self.ln2b.set_data(self.x_data, self.y_data)
         #colors
         fig_width, fig_height = plt.gcf().get_size_inches()
-        GPS_status = 'EMPTY'
         if self.gps_code_color == 'red':
             self.fig.patch.set_facecolor('coral')
-            GPS_status = 'ERROR'
         elif self.gps_code_color == 'orange':
             self.fig.patch.set_facecolor('yellow')
-            GPS_status = 'NORMAL'
         else:
             self.fig.patch.set_facecolor('white')
-            GPS_status = 'GOOD'
-        self.ax2.text(-0.1, 1.1, r'GPS:{} ({})'.format(GPS_status, self.gps_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color=self.gps_code_color) # fig_width*0.15 , 0.9 0.85 ,0.8
-        self.ax2.text(-0.1, 1.05, r'GPS uncertainty:{}'.format(self.gps_uncertainty, 3), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(-0.1, 1, r'Speed:{}[mps] / {}[mph]'.format(self.speed, round(self.speed*2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(0.6, 1.1, r'Cross Track Error[m]:{}'.format(self.lateral_error), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(0.6, 1.05, r'Outlane lateral Dist [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        GPS_status = 'EMPTY'
+        if self.gps_code == 71:
+            GPS_status = 'BEST_STATUS'
+        elif self.gps_code == 72:
+            GPS_status = 'SENSOR_FUSION'
+        elif self.gps_code == 73:
+            GPS_status = 'ONLY_TOP'
+        elif self.gps_code == 74:
+            GPS_status = 'ONLY_BOTTOM'
+        elif self.gps_code == 150:
+            GPS_status = 'GPS_HIGH_ERROR'
+        elif self.gps_code == 225:
+            GPS_status = 'UNCERTAINTY_TOO_HIGH'
+        elif self.gps_code == 235:
+            GPS_status = 'NO_CONVERGED'
+        elif self.gps_code == 255:
+            GPS_status = 'NO_SENSOR_INITIALIZED'
+        else:
+            GPS_status = 'UNKNOWN'
+        self.ax2.text(-0.0, 1.1, r'Nav: {} ({})'.format(GPS_status, self.gps_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color=self.gps_code_color) # fig_width*0.15 , 0.9 0.85 ,0.8
+        self.ax2.text(-0.0, 1.05, r'Nav uncertainty:{}'.format(self.gps_uncertainty, 3), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(-0.0, 1, r'Speed:{}[mps] / {}[mph]'.format(self.speed, round(self.speed*2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(-0.0, 0.95, r'Desired:{}[mps] / {}[mph]'.format(self.desired_speed, round(self.desired_speed*2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(0.6, 1.1, r'Cross Track Error   [m]:{}'.format(self.lateral_error), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(0.6, 1.05, r'Outlane Dist Nav   [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        # self.ax2.text(0.6, 1.05, r'Outlane lateral Dist [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        if self.wall_dist_sensing < 0.01:
+            self.ax2.text(0.6, 0.95, r'Outlane Dist LiDAR[m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        else:
+            self.ax2.text(0.6, 0.95, r'Outlane Dist LiDAR[m]:{}'.format(round(self.wall_dist_sensing,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
 
-
+        if self.wall_dist_sensing < 0.01:
+            self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        else:
+            self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]:{}'.format(round(np.abs(self.wall_dist_sensing-self.error_O),2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+           
         legned = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
         self.fig.patch.set_alpha(0.5)
+
+        Mission_status = 'EMPTY'
+        if self.mission_code == 0:
+            Mission_status = 'MISSION_RACE'
+        elif self.mission_code == 50:
+            Mission_status = 'MISSION_STANDBY'
+        elif self.mission_code == 60:
+            Mission_status = 'MISSION_PIT_IN'
+        elif self.mission_code == 65:
+            Mission_status = 'MISSION_PIT_STANDBY'
+        elif self.mission_code == 70:
+            Mission_status = 'MISSION_PIT_OUT'
+        elif self.mission_code == 75:
+            Mission_status = 'MISSION_PIT_TO_TRACK'
+        elif self.mission_code == 128:
+            Mission_status = 'MISSION_SLOW_DRIVE'
+        elif self.mission_code == 200:
+            Mission_status = 'MISSION_COMMANDED_STOP'
+        elif self.mission_code == 250:
+            Mission_status = 'MISSION_EMERGENCY_STOP'
+        elif self.mission_code == 400:
+            Mission_status = 'MISSION_COLLISION_AVOIDNACE'
+        elif self.mission_code == 500:
+            Mission_status = 'MISSION_TIRE_WARMUP'
+        elif self.mission_code == 777:
+            Mission_status = 'MISSION_TEST'
+        elif self.mission_code == 50000:
+            Mission_status = 'MISSION_INIT'
+        elif self.mission_code == 65000:
+            Mission_status = 'MISSION_PIT_INIT'
+        elif self.mission_code == 65535:
+            Mission_status = 'MISSION_DEFAULT'
+        else:
+            Mission_status = 'UNKNOWN'
+
+        self.ax2.text(0, 1.23, r'Mission Status:', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        self.ax2.text(0, 1.2, r'{} ({})'.format(Mission_status, self.mission_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black') 
+ 
         # print("update")
         # print(self.plotEO_x)
         # print(self.plotEO_y)
@@ -524,6 +602,7 @@ def main(args=None):
     sub_odom = node.create_subscription(Telemetry, '/nif_telemetry/telemetry', vis.tele_callback, qos_profile_sensor_data)
     sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
     sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
+    sub_system = node.create_subscription(SystemStatus, '/system/status', vis.system_callback, qos_profile_sensor_data)
     # sub_path = node.create_subscription(Path, '/planning/graph/path_global', vis.path_callback, qos_profile_sensor_data)
 
     rclpy.spin(node)
