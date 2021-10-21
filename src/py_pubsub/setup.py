@@ -22,7 +22,8 @@ setup(
         'console_scripts': [
             'talker = py_pubsub.publisher_member_function:main',
             'listener = py_pubsub.subscriber_member_function:main',
-            'plot = py_pubsub.viz_py2_ims:main'
+            'plot = py_pubsub.viz_py2:main',
+            'plot2 = py_pubsub.viz_py2_ims:main'
         ],
     },
 )
