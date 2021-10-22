@@ -16,7 +16,7 @@
     # Scale and offset of axes: val = (raw * scale) + offset
     axis_scale:
       brake: -50.0
-      throttle: -40.0 # MAINTAIN NEGATIVE SIGN FOR INCREASED THROTTLE   change app
+      throttle: -100.0 # MAINTAIN NEGATIVE SIGN FOR INCREASED THROTTLE   change app
       front_steer: 100.0
       rear_steer: 100.0
       # curvature:

@@ -17,7 +17,7 @@ windows:
       - ros2 run plotjuggler plotjuggler -l src/py_pubsub/assets/base_station_plot_config.xml
     - shell_command:
       # - # ros2 run userinput ui_publisher
-      - ros2 run py_pubsub plot 
+      - ros2 run py_pubsub plot2 
     - shell_command:
       # - /workspace/operations/scripts/remote_spoof_spawn.sh
     - shell_command:

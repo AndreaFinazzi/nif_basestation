@@ -602,7 +602,7 @@ def main(args=None):
     sub_odom = node.create_subscription(Telemetry, '/nif_telemetry/telemetry', vis.tele_callback, qos_profile_sensor_data)
     sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
     sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
-    sub_system = node.create_subscription(SystemStatus, '/system/status', vis.system_callback, qos_profile_sensor_data)
+    sub_system = node.create_subscription(SystemStatus, '/nif_telemetry/system_status', vis.system_callback, qos_profile_sensor_data)
     # sub_path = node.create_subscription(Path, '/planning/graph/path_global', vis.path_callback, qos_profile_sensor_data)
 
     rclpy.spin(node)

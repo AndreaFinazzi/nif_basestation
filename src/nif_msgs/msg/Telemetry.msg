@@ -7,3 +7,5 @@ nif_msgs/TelemetryLocalization localization
 nif_msgs/TelemetryControl control
 
 nif_msgs/TelemetryKinematic kinematic
+
+nif_msgs/TelemetryTires tires

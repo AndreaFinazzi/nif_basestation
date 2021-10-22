@@ -38,6 +38,7 @@ set(msg_files
     "msg/TelemetryLocalization.msg"
     "msg/TelemetryMiscReport.msg"
     "msg/TelemetryPtReport.msg"
+    "msg/TelemetryTires.msg"
     "msg/TerrainStatus.msg"
     "msg/WatchDogHeartbeat.msg"
     "msg/WatchDogStatus.msg"

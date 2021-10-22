@@ -3,69 +3,77 @@
  <tabbed_widget name="Main Window" parent="main_window">
   <Tab containers="1" tab_name="tab1">
    <Container>
-    <DockSplitter count="1" sizes="1" orientation="-">
-     <DockSplitter count="3" sizes="0.333047;0.333906;0.333047" orientation="|">
-      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+    <DockSplitter orientation="-" sizes="1" count="1">
+     <DockSplitter orientation="|" sizes="0.333668;0.332663;0.333668" count="3">
+      <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
        <DockArea name="SPEED (KPH)">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="0.000000" right="35.200432" top="200.000000" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="0.000000" top="200.000000" left="36.750530"/>
          <limitY max="200" min="0"/>
-         <curve color="#f14cc1" name="/nif_telemetry/telemetry/pt_report/vehicle_speed_kmph"/>
+         <curve name="/nif_telemetry/telemetry/pt_report/vehicle_speed_kmph" color="#f14cc1"/>
         </plot>
        </DockArea>
        <DockArea name="ACC / BRAKE CMD">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="-2.157895" right="35.200432" top="0.052632" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="-50000.018750" top="2050000.768750" left="36.750530"/>
          <limitY/>
-         <curve color="#1f77b4" name="/nif_telemetry/telemetry/control/accelerator_cmd"/>
-         <curve color="#d62728" name="/nif_telemetry/telemetry/control/brake_cmd"/>
+         <curve name="/nif_telemetry/telemetry/control/accelerator_cmd" color="#1f77b4"/>
+         <curve name="/nif_telemetry/telemetry/control/brake_cmd" color="#d62728"/>
         </plot>
        </DockArea>
       </DockSplitter>
-      <DockSplitter count="2" sizes="0.5;0.5" orientation="-">
+      <DockSplitter orientation="-" sizes="0.5;0.5" count="2">
        <DockArea name="LAT ERROR (m)">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="-3.000000" right="35.200432" top="3.000000" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="-3.000000" top="3.000000" left="36.750530"/>
          <limitY max="3" min="-3"/>
-         <curve color="#1ac938" name="/nif_telemetry/telemetry/control/crosstrack_error"/>
+         <curve name="/nif_telemetry/telemetry/control/crosstrack_error" color="#1ac938"/>
         </plot>
        </DockArea>
        <DockArea name="STEER CMD / ANGLE">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="-25.000000" right="35.200432" top="25.000000" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="-25.000000" top="25.000000" left="36.750530"/>
          <limitY max="25" min="-25"/>
-         <curve color="#1f77b4" name="/nif_telemetry/telemetry/control/steering_cmd"/>
-         <curve color="#d62728" name="/nif_telemetry/telemetry/kinematic/steering_wheel_angle_deg"/>
+         <curve name="/nif_telemetry/telemetry/control/steering_cmd" color="#1f77b4">
+          <transform name="Scale/Offset" alias="/nif_telemetry/telemetry/control/steering_cmd[Scale/Offset]">
+           <options value_scale="1.0" time_offset="0" value_offset="0"/>
+          </transform>
+         </curve>
+         <curve name="/nif_telemetry/telemetry/kinematic/steering_wheel_angle_deg" color="#d62728">
+          <transform name="Scale/Offset" alias="/nif_telemetry/telemetry/kinematic/steering_wheel_angle_deg[Scale/Offset]">
+           <options value_scale="0.1053" time_offset="0" value_offset="0"/>
+          </transform>
+         </curve>
         </plot>
        </DockArea>
       </DockSplitter>
-      <DockSplitter count="4" sizes="0.25039;0.24961;0.25039;0.24961" orientation="-">
+      <DockSplitter orientation="-" sizes="0.25039;0.24961;0.25039;0.24961" count="4">
        <DockArea name="BATTERY VOLTAGE">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="13.497500" right="35.200432" top="13.602500" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="12.800000" top="13.000000" left="36.750530"/>
          <limitY/>
-         <curve color="#d62728" name="/nif_telemetry/telemetry/misc_report/battery_voltage"/>
+         <curve name="/nif_telemetry/telemetry/misc_report/battery_voltage" color="#d62728"/>
         </plot>
        </DockArea>
        <DockArea name="ENGINE TEMP">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="52.975000" right="35.200432" top="54.025000" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="62.900000" top="63.100000" left="36.750530"/>
          <limitY/>
-         <curve color="#ff7f0e" name="/nif_telemetry/telemetry/pt_report/engine_coolant_temperature"/>
+         <curve name="/nif_telemetry/telemetry/pt_report/engine_coolant_temperature" color="#ff7f0e"/>
         </plot>
        </DockArea>
        <DockArea name="...">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="508.245000" right="35.200432" top="539.955013" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="-0.100000" top="0.100000" left="36.750530"/>
          <limitY/>
-         <curve color="#1f77b4" name="/nif_telemetry/telemetry/pt_report/fuel_pressure"/>
+         <curve name="/nif_telemetry/telemetry/pt_report/fuel_pressure" color="#1f77b4"/>
         </plot>
        </DockArea>
        <DockArea name="CUR GEAR">
-        <plot style="Lines" mode="TimeSeries">
-         <range bottom="0.000000" right="35.200432" top="7.000000" left="30.200782"/>
+        <plot mode="TimeSeries" style="Lines">
+         <range right="41.700028" bottom="0.000000" top="7.000000" left="36.750530"/>
          <limitY max="7" min="0"/>
-         <curve color="#9467bd" name="/nif_telemetry/telemetry/pt_report/current_gear"/>
+         <curve name="/nif_telemetry/telemetry/pt_report/current_gear" color="#9467bd"/>
         </plot>
        </DockArea>
       </DockSplitter>
