@@ -11,3 +11,9 @@ geometry_msgs/PoseStamped odometry
 float64 uncertainty
 
 uint8 localization_status_code 0
+
+# Distance from left object
+float32 detected_inner_distance
+
+# Distance from right object
+float32 detected_outer_distance
