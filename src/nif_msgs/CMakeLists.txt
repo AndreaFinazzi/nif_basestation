@@ -50,6 +50,10 @@ set(msg_files
     "msg/LocalizationStatus.msg"
     "msg/AccelControlStatus.msg"
     "msg/VelocityPlannerStatus.msg"
+    # "msg/TrajectoryPoint.msg"
+    # "msg/Trajectory.msg"
+    # "msg/DetectedObject.msg"
+    # "msg/DetectedObjectArray.msg"
 )
 
 set(srv_files

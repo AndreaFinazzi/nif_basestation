@@ -29,3 +29,8 @@ uint8 NO_CONVERGED = 235
 uint8 NO_SENSOR_INITIALIZED = 255
 
 uint8 localization_status_code 0
+
+uint8 pos_type_0 0
+uint8 pos_type_1 0
+
+float64 heading

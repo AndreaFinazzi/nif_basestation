@@ -16,6 +16,7 @@ services:
         environment:
             - NVIDIA_VISIBLE_DEVICES=all
             - NVIDIA_DRIVER_CAPABILITIES=all
+            - TRACK=LVMS
         volumes:
             - ${IAC_BASESTATION_ROOT}/operations:/workspace/operations
             - ${IAC_BASESTATION_ROOT}/build:/workspace/build
@@ -27,7 +28,8 @@ services:
             - ${IAC_BASESTATION_ROOT}/src/deep_orange_msgs:/workspace/src/deep_orange_msgs
             - ${IAC_BASESTATION_ROOT}/src/nif_msgs:/workspace/src/nif_msgs
             - ${IAC_BASESTATION_ROOT}/src/py_pubsub:/workspace/src/py_pubsub
+            - ${IAC_BASESTATION_ROOT}/src/telemetry_bs:/workspace/src/telemetry_bs
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
-            #- ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds
+            # - ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds/target_IAC2/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds
