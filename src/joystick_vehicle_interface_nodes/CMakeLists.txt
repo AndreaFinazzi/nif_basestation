@@ -3,7 +3,7 @@ project(joystick_vehicle_interface_nodes)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -26,17 +26,17 @@ rclcpp_components_register_node(${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE}
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  # find_package(ament_lint_auto REQUIRED)
+  # ament_lint_auto_find_test_dependencies()
 
-  # Test
-  ament_add_gtest(joystick_vehicle_interface_nodes_test
-    test/mapping.cpp)
-  target_include_directories(joystick_vehicle_interface_nodes_test PUBLIC include)
-  target_link_libraries(joystick_vehicle_interface_nodes_test
-    ${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE})
-  ament_target_dependencies(joystick_vehicle_interface_nodes_test
-    "rclcpp" "autoware_auto_msgs" "sensor_msgs" "std_msgs")
+  # # Test
+  # ament_add_gtest(joystick_vehicle_interface_nodes_test
+  #   test/mapping.cpp)
+  # target_include_directories(joystick_vehicle_interface_nodes_test PUBLIC include)
+  # target_link_libraries(joystick_vehicle_interface_nodes_test
+  #   ${JOYSTICK_VEHICLE_INTERFACE_LIB_NODE})
+  # ament_target_dependencies(joystick_vehicle_interface_nodes_test
+  #   "rclcpp" "autoware_auto_msgs" "sensor_msgs" "std_msgs")
 endif()
 
 ament_auto_package(INSTALL_TO_SHARE param launch)

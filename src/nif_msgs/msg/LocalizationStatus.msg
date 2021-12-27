@@ -24,8 +24,14 @@ uint8 SENSOR_FUSION = 72
 uint8 ONLY_TOP = 73
 uint8 ONLY_BOTTOM = 74
 uint8 GPS_HIGH_ERROR = 150
+uint8 HEADING_ERROR = 215
 uint8 UNCERTAINTY_TOO_HIGH = 225
 uint8 NO_CONVERGED = 235
 uint8 NO_SENSOR_INITIALIZED = 255
 
 uint8 localization_status_code 0
+
+uint8 pos_type_0 0
+uint8 pos_type_1 0
+
+float64 heading

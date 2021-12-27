@@ -13,9 +13,9 @@ windows:
     layout: tiled
     panes:
     - shell_command:
-      - ros2 run plotjuggler plotjuggler -l src/py_pubsub/assets/base_station_plot_config.xml
+      # - ros2 run plotjuggler plotjuggler -l src/py_pubsub/assets/base_station_plot_config.xml
     - shell_command:
-      - ros2 run py_pubsub plot 
+      # - ros2 run py_pubsub plot2 
     - shell_command:
       - ros2 run userinput ui_raceflag
     - shell_command:

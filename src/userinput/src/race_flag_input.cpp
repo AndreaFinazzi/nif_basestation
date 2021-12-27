@@ -27,50 +27,63 @@ class RCFlagInput : public rclcpp::Node
       auto flag_summary = deep_orange_msgs::msg::BaseToCarSummary();
       std::cout << "Enter RC flag input [0-4] [0 - null, 1 - Red, 2 - Orange, 3 - Yellow, 4 - Green]:";
       std::cin >> rcflag;
-      std::string confirmation_race_flag = "oogabooga";
-      while (!(confirmation_race_flag.compare("Y")==0 || confirmation_race_flag.compare("n")==0))
-      {
-        if ((!rclcpp::ok()) || confirmation_race_flag.compare("")==0)
-        {
-          return;
-        }
-        std::cout << "You entered race flag " << rcflag << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
-        std::cin >> confirmation_race_flag;
-      }
-      if (confirmation_race_flag.compare("n")==0)
-      {
-        std::cout<<"Roger that, not setting race flag"<<std::endl;
-        return;
-      }
+      // std::string confirmation_race_flag = "oogabooga";
+      // while (!(confirmation_race_flag.compare("Y")==0 || confirmation_race_flag.compare("n")==0))
+      // {
+      //   if ((!rclcpp::ok()) || confirmation_race_flag.compare("")==0)
+      //   {
+      //     return;
+      //   }
+      //   std::cout << "You entered race flag " << rcflag << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
+      //   std::cin >> confirmation_race_flag;
+      // }
+      // if (confirmation_race_flag.compare("n")==0)
+      // {
+      //   std::cout<<"Roger that, not setting race flag"<<std::endl;
+      //   return;
+      // }
       
       
-      if( rcflag > 4 || rcflag < 0 ) {
+      if( rcflag > 8 || rcflag < 0 ) {
         throw std::domain_error{"Invalid Race flag"};
       }
       flag_summary.track_flag = rcflag;
 
       std::cout << "Enter vehicle flag: [0 - null, 1 - checkered, 2 - black, 8 - purple ]";
       std::cin >> vehcond;
-      std::string confirmation_vehicle_flag = "oogabooga";
-      while (!(confirmation_vehicle_flag.compare("Y")==0 || confirmation_vehicle_flag.compare("n")==0))
-      {
-        if (!rclcpp::ok() || confirmation_vehicle_flag.compare("")==0)
-        {
-          return;
-        }
-        std::cout << "You entered vehicle flag " << vehcond << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
-        std::cin >> confirmation_vehicle_flag;
-      }
-      if (confirmation_vehicle_flag.compare("n")==0)
-      {
-        std::cout<<"Roger that, not setting vehicle flag"<<std::endl;
-        return;
-      }
+      // std::string confirmation_vehicle_flag = "oogabooga";
+      // while (!(confirmation_vehicle_flag.compare("Y")==0 || confirmation_vehicle_flag.compare("n")==0))
+      // {
+      //   if (!rclcpp::ok() || confirmation_vehicle_flag.compare("")==0)
+      //   {
+      //     return;
+      //   }
+      //   std::cout << "You entered vehicle flag " << vehcond << ". Are you sure this is what you want?[Y/n]";//<<std::endl;
+      //   std::cin >> confirmation_vehicle_flag;
+      // }
+      // if (confirmation_vehicle_flag.compare("n")==0)
+      // {
+      //   std::cout<<"Roger that, not setting vehicle flag"<<std::endl;
+      //   return;
+      // }
+      
       if(vehcond == 1){
         flag_summary.veh_flag = 1;
       }
       else if(vehcond == 2){
         flag_summary.veh_flag = 2;
+      }
+      else if(vehcond == 4){
+        flag_summary.veh_flag = 4;
+      }
+      else if(vehcond == 5){
+        flag_summary.veh_flag = 5;
+      }
+      else if(vehcond == 6){
+        flag_summary.veh_flag = 6;
+      }
+      else if(vehcond == 7){
+        flag_summary.veh_flag = 7;
       }
       else if(vehcond == 8){
         flag_summary.veh_flag = 8;
