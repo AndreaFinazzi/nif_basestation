@@ -7,4 +7,4 @@ __call_dir=$(pwd)
 export IAC_BASESTATION_ROOT=$__dir/../../
 docker-compose -f $IAC_BASESTATION_ROOT/operations/docker-compose.yml up --force-recreate -d nifbasestation
 docker exec --privileged -w "/workspace" -it nifbasestation \
-    /bin/bash -i -c 'colcon build --symlink-install --packages-select nif_msgs deep_orange_msgs bvs_msgs raptor_dbw_msgs joystick_vehicle_interface joystick_vehicle_interface_nodes userinput py_pubsub telemetry_bs'
+    /bin/bash -i -c 'colcon build --symlink-install --packages-select rmw_cyclonedds_cpp nif_msgs deep_orange_msgs bvs_msgs raptor_dbw_msgs joystick_vehicle_interface joystick_vehicle_interface_nodes userinput py_pubsub telemetry_bs'

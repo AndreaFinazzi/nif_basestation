@@ -11,7 +11,8 @@ RUN apt update \
     && apt install -y *colcon*
     # unbelievable that these aren't also installed...
 RUN apt install -y gcc g++ build-essential git
-RUN apt install -y ros-galactic-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
+# RUN apt install -y ros-galactic-rmw-cyclonedds-cpp llvm-dev libclang-dev terminator
+RUN apt install -y llvm-dev libclang-dev terminator
 
 # https://github.com/eclipse-zenoh/zenoh-plugin-dds
 # RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y

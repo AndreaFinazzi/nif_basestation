@@ -6,7 +6,7 @@ services:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
           dockerfile: ${IAC_BASESTATION_ROOT}/operations/dockerfiles/basestation.Dockerfile
-        runtime: nvidia 
+        # runtime: nvidia 
         container_name: nifbasestation
         tty: true
         network_mode: "host"
@@ -29,6 +29,7 @@ services:
             - ${IAC_BASESTATION_ROOT}/src/nif_msgs:/workspace/src/nif_msgs
             - ${IAC_BASESTATION_ROOT}/src/py_pubsub:/workspace/src/py_pubsub
             - ${IAC_BASESTATION_ROOT}/src/telemetry_bs:/workspace/src/telemetry_bs
+            - ${IAC_BASESTATION_ROOT}/src/rmw_cyclonedds:/workspace/src/rmw_cyclonedds            
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
