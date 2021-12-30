@@ -124,7 +124,8 @@ class Visualiser(Node):
         self.ln2p, = self.ax2.plot([], [], 'b-')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'm-')
+        self.ln2u, = self.ax2.plot([], [], 'c-')
+        self.ln2oppo, = self.ax2.plot([], [], 'm-.')
         self.ln2m, = self.ax2.plot([], [], 'r*') #cyan
         self.ln2eo, = self.ax2.plot([], [], 'c-') 
         self.ln2eop, = self.ax2.plot([], [], 'c-')
@@ -136,6 +137,7 @@ class Visualiser(Node):
         self.x_pit_in_data, self.y_pit_in_data = [] , []
         self.x_pit_out_data, self.y_pit_out_data = [] , []
         self.x_path_data, self.y_path_data = [] , []
+        self.x_oppo_path_data, self.y_oppo_path_data = [] , []
         self.obs_x, self.obs_y = [] , []        
         self.plotEO_x, self.plotEO_y = [], []
         self.plotEOP_x, self.plotEOP_y = [], []
@@ -314,6 +316,16 @@ class Visualiser(Node):
         #self.ax2.invert_xaxis()
         return self.ln2u
 
+    def plot_init2oppo(self):
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
+        self.ax2.spines['left'].set_position('zero')
+        self.ax2.spines['right'].set_color('none')
+        self.ax2.spines['bottom'].set_position('zero')
+        self.ax2.spines['top'].set_color('none')
+        #self.ax2.invert_xaxis()
+        return self.ln2oppo
+
     def plot_init2m(self):
         self.ax2.set_xlim(ax_x_lim)
         self.ax2.set_ylim(ax_y_lim)
@@ -356,6 +368,15 @@ class Visualiser(Node):
         for i in range(np.size(msg.poses)):
             self.x_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
             self.y_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
+
+    def oppo_prediction_path_callback(self, msg):
+        # print("path_callback")
+        self.x_oppo_path_data=[]
+        self.y_oppo_path_data=[]
+        for i in range(np.size(msg.poses)):
+            self.x_oppo_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
+            self.y_oppo_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
+
 
     def tele_callback(self, msg):
         # print("tele_callback")
@@ -490,7 +511,8 @@ class Visualiser(Node):
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=12, color='blue')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'm-')
+        self.ln2u, = self.ax2.plot([], [], 'c-')
+        self.ln2oppo, = self.ax2.plot([], [], 'm-.')
         self.ln2m, = self.ax2.plot([], [], 'rs', markersize=10)
         self.ln2eo, = self.ax2.plot([], [], marker=(100, 0, self.yaw*180/3.1415-90), markersize=8, color='purple', linewidth=2)
         self.ln2eop, = self.ax2.plot([], [], 'c-', linewidth=3)
@@ -541,7 +563,7 @@ class Visualiser(Node):
         else:
             self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]:{}'.format(round(np.abs(self.wall_dist_sensing-self.error_O),2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
            
-        legned = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
+        legend = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2oppo,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Prediction Path','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
         self.fig.patch.set_alpha(0.5)
 
         Mission_status = 'EMPTY'
@@ -603,6 +625,9 @@ class Visualiser(Node):
     def update_plot2u(self, frame):
         self.ln2u.set_data(self.x_path_data, self.y_path_data)
         return self.ln2u
+    def update_plot2oppo(self, frame):
+        self.ln2oppo.set_data(self.x_oppo_path_data, self.y_oppo_path_data)
+        return self.ln2oppo
     def update_plot2m(self, frame):
         self.ln2m.set_data(self.obs_x, self.obs_y)
         return self.ln2m
@@ -627,6 +652,7 @@ ani2p = FuncAnimation(vis.fig, vis.update_plot2p, init_func=vis.plot_init2p)
 ani2y = FuncAnimation(vis.fig, vis.update_plot2y, init_func=vis.plot_init2y)
 ani2t = FuncAnimation(vis.fig, vis.update_plot2t, init_func=vis.plot_init2t)
 ani2u = FuncAnimation(vis.fig, vis.update_plot2u, init_func=vis.plot_init2u)
+ani2oppo = FuncAnimation(vis.fig, vis.update_plot2oppo, init_func=vis.plot_init2oppo)
 ani2m = FuncAnimation(vis.fig, vis.update_plot2m, init_func=vis.plot_init2m)
 ani2eo = FuncAnimation(vis.fig, vis.update_plot2eo, init_func=vis.plot_init2eo)
 
@@ -642,6 +668,7 @@ def main(args=None):
     node = rclpy.create_node('Visualiser')
     sub_odom = node.create_subscription(Telemetry, '/nif_telemetry/telemetry', vis.tele_callback, qos_profile_sensor_data)
     sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
+    sub_oppo_prediction = node.create_subscription(Path, '/nif_telemetry/oppo_prediction', vis.oppo_prediction_path_callback, qos_profile_sensor_data)
     sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
     sub_system = node.create_subscription(SystemStatus, '/nif_telemetry/system_status', vis.system_callback, qos_profile_sensor_data)
 

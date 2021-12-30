@@ -51,6 +51,7 @@ class Telemetry : public rclcpp::Node {
           pub_system_status = this->create_publisher<nif_msgs::msg::SystemStatus>("/nif_telemetry/system_status", 10);
           pub_telemetry = this->create_publisher<nif_msgs::msg::Telemetry>("/nif_telemetry/telemetry", 10);
           pub_reference_path = this->create_publisher<nav_msgs::msg::Path>("/nif_telemetry/path_global", 10);
+          pub_oppo_prediction_path = this->create_publisher<nav_msgs::msg::Path>("/nif_telemetry/oppo_prediction", 10);
           pub_perception_result = this->create_publisher<visualization_msgs::msg::MarkerArray>("/nif_telemetry/perception_result", 10);
 
         sub_rc_to_ct = this->create_subscription<deep_orange_msgs::msg::RcToCt>(
@@ -93,6 +94,7 @@ class Telemetry : public rclcpp::Node {
             recv_telemetry_ip.c_str(), recv_telemetry_port);
 
         msg_reference_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(10);
+        msg_oppo_prediction_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(4);
         msg_perception_result.markers = std::vector<visualization_msgs::msg::Marker>(10);
     }
 
@@ -194,6 +196,7 @@ class Telemetry : public rclcpp::Node {
            msg_system_status.mission_status.max_velocity_mps = recv_telemetry_buffer[49];
            
            msg_reference_path.header.stamp.nanosec = recv_telemetry_buffer[50];
+            msg_reference_path.header.frame_id = "odom";
         
         if (msg_reference_path.poses.size() > 0) {
            msg_reference_path.poses[0].pose.position.x = recv_telemetry_buffer[51];
@@ -267,25 +270,35 @@ class Telemetry : public rclcpp::Node {
            msg_perception_result.markers[4].pose.orientation.z = recv_telemetry_buffer[88];
         }
 
-            // = recv_telemetry_buffer[89];
-            // = recv_telemetry_buffer[90];
-            // = recv_telemetry_buffer[91];
-            // = recv_telemetry_buffer[92];
-            // = recv_telemetry_buffer[93];
-            // = recv_telemetry_buffer[94];
-            // = recv_telemetry_buffer[95];
-            // = recv_telemetry_buffer[96];
-            // = recv_telemetry_buffer[97];
-            // = recv_telemetry_buffer[98];
-            // = recv_telemetry_buffer[99];
 
             msg_telemetry.localization.odometry.pose.orientation.z = recv_telemetry_buffer[89];
             msg_telemetry.localization.odometry.pose.orientation.w = recv_telemetry_buffer[90];
+
+         msg_oppo_prediction_path.header.stamp.nanosec = recv_telemetry_buffer[91];
+         msg_oppo_prediction_path.header.frame_id = "odom";
+         
+         if (msg_oppo_prediction_path.poses.size() > 0) {
+            msg_oppo_prediction_path.poses[0].pose.position.x = recv_telemetry_buffer[92];
+            msg_oppo_prediction_path.poses[0].pose.position.y = recv_telemetry_buffer[93];
+         }
+         if (msg_oppo_prediction_path.poses.size() > 1) {
+            msg_oppo_prediction_path.poses[1].pose.position.x = recv_telemetry_buffer[94];
+            msg_oppo_prediction_path.poses[1].pose.position.y = recv_telemetry_buffer[95];
+         }
+         if (msg_oppo_prediction_path.poses.size() > 2) {
+            msg_oppo_prediction_path.poses[2].pose.position.x = recv_telemetry_buffer[96];
+            msg_oppo_prediction_path.poses[2].pose.position.y = recv_telemetry_buffer[97];
+         }
+         if (msg_oppo_prediction_path.poses.size() > 3) {
+            msg_oppo_prediction_path.poses[3].pose.position.x = recv_telemetry_buffer[98];
+            msg_oppo_prediction_path.poses[3].pose.position.y = recv_telemetry_buffer[99];
+         }
 
             // publish everything on ros2
             pub_system_status->publish(msg_system_status);
             pub_telemetry->publish(msg_telemetry);
             pub_reference_path->publish(msg_reference_path);
+            pub_oppo_prediction_path->publish(msg_oppo_prediction_path);
             pub_perception_result->publish(msg_perception_result);
         }
     }
@@ -302,6 +315,7 @@ class Telemetry : public rclcpp::Node {
     rclcpp::Publisher<nif_msgs::msg::SystemStatus>::SharedPtr pub_system_status;
     rclcpp::Publisher<nif_msgs::msg::Telemetry>::SharedPtr pub_telemetry;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_reference_path;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_oppo_prediction_path;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_perception_result;
 
     rclcpp::Subscription<deep_orange_msgs::msg::RcToCt>::SharedPtr sub_rc_to_ct;
@@ -312,6 +326,7 @@ class Telemetry : public rclcpp::Node {
     nif_msgs::msg::Telemetry msg_telemetry;
     nif_msgs::msg::SystemStatus msg_system_status;
     nav_msgs::msg::Path msg_reference_path;
+    nav_msgs::msg::Path msg_oppo_prediction_path;
     visualization_msgs::msg::MarkerArray msg_perception_result;
     
     deep_orange_msgs::msg::RcToCt msg_rc_to_ct;
