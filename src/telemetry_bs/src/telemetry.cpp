@@ -9,6 +9,7 @@
 #include <deep_orange_msgs/msg/misc_report.hpp>
 #include <deep_orange_msgs/msg/pt_report.hpp>
 #include <deep_orange_msgs/msg/rc_to_ct.hpp>
+#include <nif_msgs/msg/dynamic_trajectory.hpp>
 #include <nif_msgs/msg/system_status.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -108,7 +109,7 @@ public:
                 recv_telemetry_port);
 
     msg_reference_path.poses = std::vector<geometry_msgs::msg::PoseStamped>(10);
-    msg_reference_traj.trajectory_path =
+    msg_reference_traj.trajectory_path.poses =
         std::vector<geometry_msgs::msg::PoseStamped>(10);
     msg_oppo_prediction_path.poses =
         std::vector<geometry_msgs::msg::PoseStamped>(4);
@@ -466,6 +467,8 @@ private:
   rclcpp::Publisher<nif_msgs::msg::SystemStatus>::SharedPtr pub_system_status;
   rclcpp::Publisher<nif_msgs::msg::Telemetry>::SharedPtr pub_telemetry;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_reference_path;
+  rclcpp::Publisher<nif_msgs::msg::DynamicTrajectory>::SharedPtr
+      pub_reference_traj;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_oppo_prediction_path;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr
       pub_perception_result;

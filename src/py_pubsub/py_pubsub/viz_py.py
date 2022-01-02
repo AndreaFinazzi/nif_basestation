@@ -703,11 +703,13 @@ class Visualiser(Node):
     def update_plot2t(self, frame):
         self.ln2t.set_data(self.x_pit_out_data, self.y_pit_out_data)
         return self.ln2t
+
+    # Deprecated
     # def update_plot2u(self, frame):
     #     self.ln2u.set_data(self.x_path_data, self.y_path_data)
     #     return self.ln2u
 
-    def update_plot2traj(self, frame):
+    def update_plot2u(self, frame):
         self.ln2u.set_data(self.traj_x, self.traj_y)
         return self.ln2u
 
