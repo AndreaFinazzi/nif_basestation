@@ -1,0 +1,10 @@
+string maptrack_id
+uint32 waypoint_index
+
+float64 velocity_mps
+
+---
+
+bool success
+string message
+uint32 vehicle_id

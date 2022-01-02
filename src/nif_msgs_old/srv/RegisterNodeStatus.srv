@@ -1,0 +1,9 @@
+string node_name
+uint8 node_type
+string status_topic_name
+
+---
+
+bool success
+string message
+uint16 node_id
