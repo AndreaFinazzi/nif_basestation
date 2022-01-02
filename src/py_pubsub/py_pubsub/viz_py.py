@@ -115,10 +115,11 @@ class Visualiser(Node):
         self.y_bias = track_y_bias
         # self.x_bias = 0.0 # LOR
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw))
-        self.ln1i, = self.ax1.plot([], [], 'r-')
-        self.ln1o, = self.ax1.plot([], [], 'g-')
-        self.ln1y, = self.ax1.plot([], [], 'k-')
-        self.ln1t, = self.ax1.plot([], [], 'k-')
+
+        self.ln1i, = self.ax1.plot([], [], 'g--')
+        self.ln1o, = self.ax1.plot([], [], 'g--')
+        self.ln1y, = self.ax1.plot([], [], color='0.5')
+        self.ln1t, = self.ax1.plot([], [], color='0.5')
 
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw))
         self.ln2i, = self.ax2.plot([], [], 'r-')
@@ -533,7 +534,9 @@ class Visualiser(Node):
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw * 180 / 3.1415 - 90), markersize=12, color='blue')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'c-')
+
+        # self.ln2u, = self.ax2.plot([], [], 'c-')
+
         self.ln2oppo, = self.ax2.plot([], [], 'm-.')
         self.ln2m, = self.ax2.plot([], [], 'rs', markersize=10)
         self.ln2eo, = self.ax2.plot([], [], marker=(100, 0, self.yaw * 180 / 3.1415 - 90), markersize=8, color='purple', linewidth=2)
@@ -576,12 +579,19 @@ class Visualiser(Node):
 
         if self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_KEEP:
             traj_lat_status = "Lat: Keep path"
+            self.ln2u, = self.ax2.plot([], [], 'c-')
+
         elif self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_MERGE:
             traj_lat_status = "Lat: Merge back"
+            self.ln2u, = self.ax2.plot([], [], color='c', linestyle=(0, (5, 10)))
+
         elif self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_CHANGE_PATH:
             traj_lat_status = "Lat: Change path"
+            self.ln2u, = self.ax2.plot([], [], color='c', linestyle=(0, (5, 10)))
+
         else:
             traj_lat_status = "Lat: Unknown"
+            self.ln2u, = self.ax2.plot([], [], 'k-')
 
         if self.long_planning_type == DynamicTrajectory.LONGITUDINAL_PLANNING_TYPE_STRAIGHT:
             traj_long_status = " Long: Drive"
