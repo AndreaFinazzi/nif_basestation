@@ -21,6 +21,13 @@ windows:
       # - /workspace/operations/scripts/remote_spoof_spawn.sh
     - shell_command:
       # - /workspace/operations/scripts/remote_sensors_bagging.sh
+  # - window_name: User Inputs 2
+  #   layout: tiled
+  #   shell_command_before:
+  #     - cd /media/usrg/PortableSSD/rosbag
+  #   panes:
+  #   - shell_command:
+  #     - ros2 bag play autonomy_2022-01-06_15-55-07
   - window_name: Ping and State
     layout: even-horizontal
     options:

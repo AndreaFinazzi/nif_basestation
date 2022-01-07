@@ -6,7 +6,7 @@ services:
           # docker build context
           context: ${IAC_BASESTATION_ROOT}
           dockerfile: ${IAC_BASESTATION_ROOT}/operations/dockerfiles/basestation.Dockerfile
-        # runtime: nvidia 
+        runtime: nvidia 
         container_name: nifbasestation
         tty: true
         network_mode: "host"
@@ -33,4 +33,6 @@ services:
             - /tmp/.X11-unix:/tmp/.X11-unix
             - /etc/localtime:/etc/localtime:ro
             - /dev/input:/dev/input
+            - /home/usrg:/home/usrg
+            # - /media/usrg/PortableSSD/rosbag:/media/usrg/PortableSSD/rosbag
             # - ${IAC_BASESTATION_ROOT}/src/zenoh-bridge-dds/target_IAC2/zenoh-bridge-dds:/usr/bin/zenoh-bridge-dds

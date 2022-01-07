@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
+from nif_msgs.msg import DynamicTrajectory
 from std_msgs.msg import Float32
 from std_msgs.msg import Bool
 from nif_msgs.msg import Telemetry
@@ -17,6 +18,9 @@ from tf_transformations import quaternion_matrix
 import tf_transformations
 import numpy as np
 from matplotlib.animation import FuncAnimation
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.transforms import Affine2D
+import mpl_toolkits.axisartist.floating_axes as floating_axes
 import csv
 import math
 
@@ -48,8 +52,8 @@ csv_trackboundaries_outer = ''
 csv_trackboundaries_pit_inner = ''
 csv_trackboundaries_pit_outer = ''
 
-track_x_bias = 0 
-track_y_bias = 0 
+track_x_bias = 0
+track_y_bias = 0
 
 ax_x_lim = (0, 0)
 ax_y_lim = (0, 0)
@@ -65,11 +69,11 @@ elif track == IMS:
     csv_trackboundaries_outer = '/workspace/src/py_pubsub/py_pubsub/ims_outer_211004_cy_modified_wpt.csv'
     csv_trackboundaries_pit_inner = '/workspace/src/py_pubsub/py_pubsub/ims_pit_inner_wpt.csv'
     csv_trackboundaries_pit_outer = '/workspace/src/py_pubsub/py_pubsub/ims_pit_outer_wpt.csv'
-    track_x_bias = 1600 #IMS
-    track_y_bias = 320 #IMS
+    track_x_bias = 1600  # IMS
+    track_y_bias = 320  # IMS
 
-    ax_x_lim = (-850,850)
-    ax_y_lim = (-850,850)
+    ax_x_lim = (-850, 850)
+    ax_y_lim = (-850, 850)
 
 elif track == IMS_SIM:
     config_file = 'config_lgsim.yaml'
@@ -79,11 +83,11 @@ elif track == LVMS:
     csv_trackboundaries_outer = '/workspace/src/py_pubsub/assets/LVMS/trackboundary_right.csv'
     csv_trackboundaries_pit_inner = '/workspace/src/py_pubsub/assets/LVMS/pit_trackboundary_left.csv'
     csv_trackboundaries_pit_outer = '/workspace/src/py_pubsub/assets/LVMS/pit_trackboundary_right.csv'
-    track_x_bias = 0 #IMS
-    track_y_bias = 0 #IMS
+    track_x_bias = 0  # IMS
+    track_y_bias = 0  # IMS
 
-    ax_x_lim = (0,1000)
-    ax_y_lim = (0,-1000)
+    ax_x_lim = (0, 1000)
+    ax_y_lim = (0, -1000)
 
 elif track == LVMS_SIM:
     config_file = 'config_lvms_sim.yaml'
@@ -91,8 +95,9 @@ elif track == LVMS_SIM:
 else:
     raise RuntimeError("ERROR: invalid track provided: {}".format(track))
 
+
 class Visualiser(Node):
-    def __init__(self):      
+    def __init__(self):
         self.range =np.pi/5
         self.x_pred=0
         self.y_pred=0
@@ -104,8 +109,13 @@ class Visualiser(Node):
         self.max = 10**10
         self.fig = fig
         self.ax1 = ax1
-        self.ax2 = ax2 
+        self.ax2 = ax2
+        self.ax1.invert_xaxis()
+        self.ax1.invert_yaxis()
         self.x_data, self.y_data = [] , []
+        self.x_oppo_data, self.y_oppo_data = [], []
+        self.x_oppo_curr = 0
+        self.y_oppo_curr = 0
         self.yaw=0
         self.x=0
         self.y=0
@@ -117,7 +127,12 @@ class Visualiser(Node):
         self.ln1o, = self.ax1.plot([], [], 'g-')
         self.ln1y, = self.ax1.plot([], [], 'k-')
         self.ln1t, = self.ax1.plot([], [], 'k-')
-                        
+        # self.ln1i, = self.ax1.plot([], [], 'g--')
+        # self.ln1o, = self.ax1.plot([], [], 'g--')
+        # self.ln1y, = self.ax1.plot([], [], color='0.5')
+        # self.ln1t, = self.ax1.plot([], [], color='0.5')
+        self.ln1oppo, = self.ax1.plot([], [], marker='o', markersize=10, color='red')
+
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw))
         self.ln2i, = self.ax2.plot([], [], 'r-')
         self.ln2o, = self.ax2.plot([], [], 'g-')
@@ -126,8 +141,8 @@ class Visualiser(Node):
         self.ln2t, = self.ax2.plot([], [], 'k-')
         self.ln2u, = self.ax2.plot([], [], 'c-')
         self.ln2oppo, = self.ax2.plot([], [], 'm-.')
-        self.ln2m, = self.ax2.plot([], [], 'r*') #cyan
-        self.ln2eo, = self.ax2.plot([], [], 'c-') 
+        # self.ln2m, = self.ax2.plot([], [], 'r*') #cyan
+        self.ln2eo, = self.ax2.plot([], [], 'c-')
         self.ln2eop, = self.ax2.plot([], [], 'c-')
 
         self.x_data, self.y_data = [] , []
@@ -151,6 +166,12 @@ class Visualiser(Node):
         self.gps_code_color = 'black'
         self.lateral_error = 0
         self.mission_code = 0
+
+        # for dynamic trajectory (ego vehicle's planned result)
+        self.traj_x, self.traj_y = [], []
+        self.lat_planning_type = -1
+        self.long_planning_type = -1
+        self.planning_target_path_id = -1
 
         f = open(csv_trackboundaries_inner,'r')
         rdr = csv.reader(f)
@@ -188,7 +209,7 @@ class Visualiser(Node):
                 self.y_pit_out_data.append(float(line[1])+self.y_bias)
             self.cnt=1
         f.close()
-        self.cnt=0        
+        self.cnt=0
 
     def plot_init1b(self):
         self.ax1.set_xlim(ax_x_lim)
@@ -197,43 +218,47 @@ class Visualiser(Node):
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
-        #self.ax1.invert_xaxis()
+        # self.ax1.invert_xaxis()
+        # self.ax1.invert_yaxis()
         return self.ln1b
 
     def plot_init1i(self):
         self.ax1.set_xlim(ax_x_lim)
         self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
-        # self.ax1.set_ylim(-250,50)                
+        # self.ax1.set_ylim(-250,50)
         self.ax1.spines['left'].set_position('zero')
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
-        #self.ax1.invert_xaxis()
+        # self.ax1.invert_xaxis()
+        # self.ax1.invert_yaxis()
         return self.ln1i
 
     def plot_init1o(self):
         self.ax1.set_xlim(ax_x_lim)
         self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
-        # self.ax1.set_ylim(-250,50)                
+        # self.ax1.set_ylim(-250,50)
         self.ax1.spines['left'].set_position('zero')
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
-        #self.ax1.invert_xaxis()
+        # self.ax1.invert_xaxis()
+        # self.ax1.invert_yaxis()
         return self.ln1o
 
     def plot_init1y(self):
         self.ax1.set_xlim(ax_x_lim)
         self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
-        # self.ax1.set_ylim(-250,50)                
+        # self.ax1.set_ylim(-250,50)
         self.ax1.spines['left'].set_position('zero')
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
-        #self.ax1.invert_xaxis()
+        # self.ax1.invert_xaxis()
+        # self.ax1.invert_yaxis()
         return self.ln1y
 
     def plot_init1t(self):
@@ -243,8 +268,18 @@ class Visualiser(Node):
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
-        #self.ax1.invert_xaxis()
-        return self.ln1t               
+        # self.ax1.invert_xaxis()
+        # self.ax1.invert_yaxis()
+        return self.ln1t
+
+    def plot_init1oppo(self):
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
+        self.ax1.spines['left'].set_position('zero')
+        self.ax1.spines['right'].set_color('none')
+        self.ax1.spines['bottom'].set_position('zero')
+        self.ax1.spines['top'].set_color('none')
+        return self.ln1oppo
 
     def plot_init2b(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -253,8 +288,8 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
-        return self.ln2b    
+        # self.ax2.invert_xaxis()
+        return self.ln2b
 
     def plot_init2i(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -263,8 +298,8 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
-        return self.ln2i    
+        # self.ax2.invert_xaxis()
+        return self.ln2i
 
     def plot_init2o(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -273,8 +308,8 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
-        return self.ln2o    
+        # self.ax2.invert_xaxis()
+        return self.ln2o
 
     def plot_init2p(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -283,7 +318,7 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
+        # self.ax2.invert_xaxis()
         return self.ln2p
 
     def plot_init2y(self):
@@ -293,8 +328,8 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
-        return self.ln2y   
+        # self.ax2.invert_xaxis()
+        return self.ln2y
 
     def plot_init2t(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -303,7 +338,7 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
+        # self.ax2.invert_xaxis()
         return self.ln2t
 
     def plot_init2u(self):
@@ -313,7 +348,7 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
+        # self.ax2.invert_xaxis()
         return self.ln2u
 
     def plot_init2oppo(self):
@@ -323,18 +358,18 @@ class Visualiser(Node):
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
+        # self.ax2.invert_xaxis()
         return self.ln2oppo
 
-    def plot_init2m(self):
-        self.ax2.set_xlim(ax_x_lim)
-        self.ax2.set_ylim(ax_y_lim)
-        self.ax2.spines['left'].set_position('zero')
-        self.ax2.spines['right'].set_color('none')
-        self.ax2.spines['bottom'].set_position('zero')
-        self.ax2.spines['top'].set_color('none')
-        #self.ax2.invert_xaxis()
-        return self.ln2m
+    # def plot_init2m(self):
+    #     self.ax2.set_xlim(ax_x_lim)
+    #     self.ax2.set_ylim(ax_y_lim)
+    #     self.ax2.spines['left'].set_position('zero')
+    #     self.ax2.spines['right'].set_color('none')
+    #     self.ax2.spines['bottom'].set_position('zero')
+    #     self.ax2.spines['top'].set_color('none')
+    #     # self.ax2.invert_xaxis()
+    #     return self.ln2m
 
     def plot_init2eo(self):
         self.ax2.set_xlim(ax_x_lim)
@@ -369,14 +404,49 @@ class Visualiser(Node):
             self.x_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
             self.y_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
 
+    def traj_callback(self, msg):
+        # print("path_callback")
+        self.traj_x = []
+        self.traj_y = []
+
+        for i in range(np.size(msg.trajectory_path.poses)):
+            self.traj_x.append(msg.trajectory_path.poses[i].pose.position.x + self.x_bias)
+            self.traj_y.append(msg.trajectory_path.poses[i].pose.position.y + self.y_bias)
+
+        self.lat_planning_type = msg.lat_planning_type
+        self.long_planning_type = msg.longi_planning_type
+        self.planning_target_path_id = msg.planning_target_path_type
+
     def oppo_prediction_path_callback(self, msg):
         # print("path_callback")
         self.x_oppo_path_data=[]
         self.y_oppo_path_data=[]
+
+        ######################### [TOREMOVE] #########################
         for i in range(np.size(msg.poses)):
+            if i == 0:
+                self.x_oppo_curr = self.x + 50 # temporary!!!
+                self.y_oppo_curr = self.y + 100 # temporary!!!
             self.x_oppo_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
             self.y_oppo_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
+        
+        ######################### [TODO] #############################
+        # for i in range(np.size(msg.trajectory_path.poses)):
+        #     if i == 0:
+        #         self.x_oppo_curr = msg.trajectory_path.poses[i].pose.position.x + self.x_bias
+        #         self.y_oppo_curr = msg.trajectory_path.poses[i].pose.position.y + self.y_bias
+        #     self.x_oppo_path_data.append(msg.trajectory_path.poses[i].pose.position.x + self.x_bias)
+        #     self.y_oppo_path_data.append(msg.trajectory_path.poses[i].pose.position.y + self.y_bias)
+            
+        # self.oppo_lat_planning_type = msg.lat_planning_type
+        # self.oppo_long_planning_type = msg.longi_planning_type
+        # self.oppo_planning_target_path_id = msg.planning_target_path_type
 
+        ##############################################################
+
+        self.x_oppo_data, self.y_oppo_data = [], []
+        self.x_oppo_data.append(self.x_oppo_curr)
+        self.y_oppo_data.append(self.y_oppo_curr)
 
     def tele_callback(self, msg):
         # print("tele_callback")
@@ -482,8 +552,9 @@ class Visualiser(Node):
         self.ln1b.remove()
 
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=20, color='blue')
-              
+
         self.ln1b.set_data(self.x_data, self.y_data)
+        # print(self.x_data, self.y_data)
         return self.ln1b
 
     def update_plot1i(self, frame):
@@ -498,8 +569,15 @@ class Visualiser(Node):
         return self.ln1y
     def update_plot1t(self, frame):
         self.ln1t.set_data(self.x_pit_out_data, self.y_pit_out_data)
-        return self.ln1t        
-        
+        return self.ln1t
+
+    def update_plot1oppo(self, frame):
+        self.ln1oppo.remove()
+
+        self.ln1oppo, = self.ax1.plot([], [], marker='o', markersize=10, color='red')
+        self.ln1oppo.set_data(self.x_oppo_data, self.y_oppo_data)
+        return self.ln1oppo
+
     def update_plot2b(self, frame):
         self.ln2b.remove()
         self.ax2.clear()
@@ -508,12 +586,14 @@ class Visualiser(Node):
         self.ln2i, = self.ax2.plot([], [], 'r-')
         self.ln2o, = self.ax2.plot([], [], 'g-')
         self.ln2p, = self.ax2.plot([], [], 'b-')
-        self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=12, color='blue')
+        self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=20, color='blue')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'c-')
+
+        # self.ln2u, = self.ax2.plot([], [], 'c-')
+
         self.ln2oppo, = self.ax2.plot([], [], 'm-.')
-        self.ln2m, = self.ax2.plot([], [], 'rs', markersize=10)
+        # self.ln2m, = self.ax2.plot([], [], 'rs', markersize=10)
         self.ln2eo, = self.ax2.plot([], [], marker=(100, 0, self.yaw*180/3.1415-90), markersize=8, color='purple', linewidth=2)
         self.ln2eop, = self.ax2.plot([], [], 'c-', linewidth=3)
         self.ax2.axis([self.x-50, self.x+50, self.y-50, self.y+50])
@@ -546,24 +626,79 @@ class Visualiser(Node):
             GPS_status = 'NO_SENSOR_INITIALIZED'
         else:
             GPS_status = 'UNKNOWN'
-        self.ax2.text(-0.0, 1.1, r'Nav: {} ({})'.format(GPS_status, self.gps_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color=self.gps_code_color) # fig_width*0.15 , 0.9 0.85 ,0.8
-        self.ax2.text(-0.0, 1.05, r'Nav uncertainty:{}'.format(self.gps_uncertainty, 3), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(-0.0, 1, r'Speed:{}[mps] / {}[mph]'.format(self.speed, round(self.speed*2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(-0.0, 0.95, r'Desired:{}[mps] / {}[mph]'.format(self.desired_speed, round(self.desired_speed*2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+
+        # Trajctory planning info
+        traj_lat_status = "UNKNOWN"
+        traj_long_status = "UNKNOWN"
+        traj_target_path_id_status = "UNKNOWN"
+
+        if self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_KEEP:
+            traj_lat_status = "Lat: Keep path"
+            self.ln2u, = self.ax2.plot([], [], 'c-')
+
+        elif self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_MERGE:
+            traj_lat_status = "Lat: Merge back"
+            self.ln2u, = self.ax2.plot([], [], color='c', linestyle=(0, (5, 10)))
+
+        elif self.lat_planning_type == DynamicTrajectory.LATERAL_PLANNING_TYPE_CHANGE_PATH:
+            traj_lat_status = "Lat: Change path"
+            self.ln2u, = self.ax2.plot([], [], color='c', linestyle=(0, (5, 10)))
+
+        else:
+            traj_lat_status = "Lat: Unknown"
+            self.ln2u, = self.ax2.plot([], [], 'k-')
+
+        if self.long_planning_type == DynamicTrajectory.LONGITUDINAL_PLANNING_TYPE_STRAIGHT:
+            traj_long_status = " Long: Drive"
+        elif self.long_planning_type == DynamicTrajectory.LONGITUDINAL_PLANNING_TYPE_FOLLOW:
+            traj_long_status = " Long: Follow"
+        elif self.long_planning_type == DynamicTrajectory.LONGITUDINAL_PLANNING_TYPE_ESTOP:
+            traj_long_status = " Long: Estop"
+        else:
+            traj_long_status = " Long: Unknown"
+
+        if self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_RACELINE:
+            traj_target_path_id_status = " Target Path: RaceLine"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_CENTER:
+            traj_target_path_id_status = " Target Path: Center"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_RIGHT:
+            traj_target_path_id_status = " Target Path: Right-side"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_LEFT:
+            traj_target_path_id_status = " Target Path: Left-side"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_CENTER_RIGHT:
+            traj_target_path_id_status = " Target Path: Right-center-side"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_CENTER_LEFT:
+            traj_target_path_id_status = " Target Path: Left-center-side"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_RACE_READY:
+            traj_target_path_id_status = " Target Path: Race ready"
+        elif self.planning_target_path_id == DynamicTrajectory.PLANNING_TARGET_PATH_DEFENDER:
+            traj_target_path_id_status = " Target Path: Defender line"
+        else:
+            traj_target_path_id_status = " Target Path: Unknown"
+
+        self.ax2.text(-0.1, 1.1, r'Nav: {} ({})'.format(GPS_status, self.gps_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color=self.gps_code_color)  # fig_width*0.15 , 0.9 0.85 ,0.8
+        self.ax2.text(-0.1, 1.05, r'Nav uncertainty:{}'.format(self.gps_uncertainty, 3), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(-0.1, 1, r'Speed:{}[mps] / {}[mph]'.format(self.speed, round(self.speed * 2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(-0.1, 0.95, r'Desired:{}[mps] / {}[mph]'.format(self.desired_speed, round(self.desired_speed * 2.23694, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
         self.ax2.text(0.6, 1.1, r'Cross Track Error   [m]:{}'.format(self.lateral_error), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
         self.ax2.text(0.6, 1.05, r'Outlane Dist Nav   [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        # self.ax2.text(0.6, 1.05, r'Outlane lateral Dist [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+        # self.ax2.text(0.6, 1.05, r'Outlane lateral Dist [m]:{}'.format(round(self.error_O,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
         if self.wall_dist_sensing < 0.01:
-            self.ax2.text(0.6, 0.95, r'Outlane Dist LiDAR[m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+            self.ax2.text(0.6, 1, r'Outlane Dist LiDAR[m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
         else:
-            self.ax2.text(0.6, 0.95, r'Outlane Dist LiDAR[m]:{}'.format(round(self.wall_dist_sensing,2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
+            self.ax2.text(0.6, 1, r'Outlane Dist LiDAR[m]:{}'.format(round(self.wall_dist_sensing, 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
 
-        if self.wall_dist_sensing < 0.01:
-            self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
-        else:
-            self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]:{}'.format(round(np.abs(self.wall_dist_sensing-self.error_O),2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
-           
-        legend = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2oppo,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Prediction Path','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
+        # if self.wall_dist_sensing < 0.01:
+        #     self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]: None', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        # else:
+        #     self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]:{}'.format(round(np.abs(self.wall_dist_sensing - self.error_O), 2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+
+        # Planning type
+        self.ax2.text(0.6, 0.95, r'Planning Info : ', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(0.45, 0.9, r'{} / {} / d{}'.format(traj_lat_status, traj_long_status, traj_target_path_id_status), transform=self.ax2.transAxes, horizontalalignment='left', size=12, color='black')
+
+        # legend = self.ax1.legend([self.ln2i, self.ln2o, self.ln2y, self.ln2p, self.ln2u, self.ln2oppo, self.ln2m], ['Inner lane', 'Outer lane', 'Pit lane', 'Pediction path', 'Waypoint', 'Prediction Path', 'Obstacle'], bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize=10, frameon=False)
+        legend = self.ax1.legend([self.ln2p, self.ln2u, self.ln2oppo, self.ln1oppo], ['Ego Prediction path', 'Waypoint', 'Target Prediction Path', 'Target'], bbox_to_anchor=(1.0, 0.8), ncol=1, fontsize=10, frameon=False)
         self.fig.patch.set_alpha(0.5)
 
         Mission_status = 'EMPTY'
@@ -600,13 +735,19 @@ class Visualiser(Node):
         else:
             Mission_status = 'UNKNOWN'
 
-        self.ax2.text(0, 1.23, r'Mission Status:', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
-        self.ax2.text(0, 1.2, r'{} ({})'.format(Mission_status, self.mission_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
- 
+        self.ax2.text(-0.1, 1.28, r'Autonomous Racecar Challenge @CES2022', transform=self.ax2.transAxes, horizontalalignment='left', size=12, color='black', weight='bold')
+        self.ax2.text(-0.1, 1.23, r'Mission Status:', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(-0.1, 1.2, r'{}'.format(Mission_status), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+
+        abUSRG = AnnotationBbox(imageboxUSRG, (self.x - 40, self.y - 45), frameon = False)
+        self.ax2.add_artist(abUSRG)
+        
         return self.ln2b
 
     def update_plot2i(self, frame):
         self.ln2i.set_data(self.x_in_data, self.y_in_data)
+        abKAIST = AnnotationBbox(imageboxKAIST, (self.x + 10, self.x + 10), frameon = False)
+        self.ax2.add_artist(abKAIST)
         return self.ln2i
 
     def update_plot2o(self, frame):
@@ -622,22 +763,48 @@ class Visualiser(Node):
     def update_plot2t(self, frame):
         self.ln2t.set_data(self.x_pit_out_data, self.y_pit_out_data)
         return self.ln2t
+
+    # Deprecated
+    # def update_plot2u(self, frame):
+    #     self.ln2u.set_data(self.x_path_data, self.y_path_data)
+    #     return self.ln2u
+
     def update_plot2u(self, frame):
-        self.ln2u.set_data(self.x_path_data, self.y_path_data)
+        self.ln2u.set_data(self.traj_x, self.traj_y)
         return self.ln2u
+
     def update_plot2oppo(self, frame):
-        self.ln2oppo.set_data(self.x_oppo_path_data, self.y_oppo_path_data)
+        try:
+            if self.x_oppo_path_data_prev == self.x_oppo_path_data and self.y_oppo_path_data_prev == self.y_oppo_path_data:
+                self.ln2oppo.set_data([], [])
+            else:
+                self.ln2oppo.set_data(self.x_oppo_path_data, self.y_oppo_path_data)
+        except AttributeError:
+            # print("There is NO opponent path data..")
+            pass
+        self.x_oppo_path_data_prev = self.x_oppo_path_data
+        self.y_oppo_path_data_prev = self.y_oppo_path_data
         return self.ln2oppo
-    def update_plot2m(self, frame):
-        self.ln2m.set_data(self.obs_x, self.obs_y)
-        return self.ln2m
+    # def update_plot2m(self, frame):
+    #     self.ln2m.set_data(self.obs_x, self.obs_y)
+    #     return self.ln2m
     def update_plot2eo(self, frame):
         self.ln2eo.set_data(self.plotEO_x, self.plotEO_y)
         return self.ln2eo
     def update_plot2eop(self, frame):
         self.ln2eop.set_data(self.plotEOP_x, self.plotEOP_y)
-        return self.ln2eop                             
+        return self.ln2eop
+
+        
 fig, (ax1, ax2) = plt.subplots(2,1,gridspec_kw={'height_ratios': [1, 3]})
+# transf = Affine2D().rotate_deg(25)
+# h = floating_axes.GridHelperCurveLinear(transf, ax_x_lim+ax_y_lim)
+# ax1 = floating_axes.FloatingSubplot(fig, 111, grid_helper=h)
+
+logoUSRG = plt.imread(r'/home/usrg/Downloads/logoKAISTUSRG.png')
+imageboxUSRG = OffsetImage(logoUSRG, zoom=0.3)
+logoKAIST = plt.imread(r'/home/usrg/Downloads/kaist_logo.png')
+imageboxKAIST = OffsetImage(logoKAIST, zoom=0.1)
 
 vis = Visualiser()
 ani1b = FuncAnimation(vis.fig, vis.update_plot1b, init_func=vis.plot_init1b, interval=100)
@@ -645,6 +812,7 @@ ani1i = FuncAnimation(vis.fig, vis.update_plot1i, init_func=vis.plot_init1i, int
 ani1o = FuncAnimation(vis.fig, vis.update_plot1o, init_func=vis.plot_init1o, interval=100)
 ani1y = FuncAnimation(vis.fig, vis.update_plot1y, init_func=vis.plot_init1y, interval=100)
 ani1t = FuncAnimation(vis.fig, vis.update_plot1t, init_func=vis.plot_init1t, interval=100)
+ani1oppo = FuncAnimation(vis.fig, vis.update_plot1oppo, init_func=vis.plot_init1oppo, interval=100)
 ani2b = FuncAnimation(vis.fig, vis.update_plot2b, init_func=vis.plot_init2b, interval=100)
 ani2i = FuncAnimation(vis.fig, vis.update_plot2i, init_func=vis.plot_init2i, interval=100)
 ani2o = FuncAnimation(vis.fig, vis.update_plot2o, init_func=vis.plot_init2o, interval=100)
@@ -653,7 +821,7 @@ ani2y = FuncAnimation(vis.fig, vis.update_plot2y, init_func=vis.plot_init2y, int
 ani2t = FuncAnimation(vis.fig, vis.update_plot2t, init_func=vis.plot_init2t, interval=100)
 ani2u = FuncAnimation(vis.fig, vis.update_plot2u, init_func=vis.plot_init2u, interval=100)
 ani2oppo = FuncAnimation(vis.fig, vis.update_plot2oppo, init_func=vis.plot_init2oppo, interval=100)
-ani2m = FuncAnimation(vis.fig, vis.update_plot2m, init_func=vis.plot_init2m, interval=100)
+# ani2m = FuncAnimation(vis.fig, vis.update_plot2m, init_func=vis.plot_init2m, interval=100)
 ani2eo = FuncAnimation(vis.fig, vis.update_plot2eo, init_func=vis.plot_init2eo, interval=100)
 
 vis.ax1.axis('scaled')
@@ -663,14 +831,18 @@ vis.ax2.axis('off')
 plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
 fig.show()
 
-def main(args=None):
+def main(args=None):    
     rclpy.init(args=args)
     node = rclpy.create_node('Visualiser')
     sub_odom = node.create_subscription(Telemetry, '/nif_telemetry/telemetry', vis.tele_callback, qos_profile_sensor_data)
-    sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
-    sub_oppo_prediction = node.create_subscription(Path, '/nif_telemetry/oppo_prediction', vis.oppo_prediction_path_callback, qos_profile_sensor_data)
-    sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
-    sub_system = node.create_subscription(SystemStatus, '/nif_telemetry/system_status', vis.system_callback, qos_profile_sensor_data)
+    # sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
+    # sub_traj = node.create_subscription(DynamicTrajectory, '/nif_telemetry/traj_global', vis.traj_callback, qos_profile_sensor_data)
+    ######################### [TOREMOVE] #####################
+    sub_oppo_traj = node.create_subscription(Path, '/nif_telemetry/path_global', vis.oppo_prediction_path_callback, qos_profile_sensor_data)
+    ######################### [TODO] #########################
+    # sub_oppo_prediction = node.create_subscription(DynamicTrajectory, '/nif_telemetry/oppo_prediction', vis.oppo_prediction_path_callback, qos_profile_sensor_data)
+    ##########################################################
+    # sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
 
     rclpy.spin(node)
 
