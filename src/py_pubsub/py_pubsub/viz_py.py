@@ -1,4 +1,5 @@
 from textwrap import dedent
+import os
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -19,6 +20,77 @@ from matplotlib.animation import FuncAnimation
 import csv
 import math
 
+IMS = 0
+LOR = 1
+IMS_SIM = 2
+LVMS = 3
+LVMS_SIM = 4
+track = None
+
+# get which track we are at
+track_id = os.environ.get('TRACK').strip()
+
+if track_id == "IMS" or track_id == "ims":
+    track = IMS
+elif track_id == "LOR" or track_id == "lor":
+    track = LOR
+elif track_id == "IMS_SIM" or track_id == "ims_sim":
+    track = IMS_SIM
+elif track_id == "LVMS" or track_id == "lvms":
+    track = LVMS
+elif track_id == "LVMS_SIM" or track_id == "lvms_sim":
+    track = LVMS_SIM
+else:
+    raise RuntimeError("ERROR: Invalid track {}".format(track_id))
+
+csv_trackboundaries_inner = ''
+csv_trackboundaries_outer = ''
+csv_trackboundaries_pit_inner = ''
+csv_trackboundaries_pit_outer = ''
+
+track_x_bias = 0 
+track_y_bias = 0 
+
+ax_x_lim = (0, 0)
+ax_y_lim = (0, 0)
+
+if track == LOR:
+    csv_trackboundaries_inner = '/workspace/src/py_pubsub/py_pubsub/ims_inner_211004_cy_modified_wpt.csv'
+    csv_trackboundaries_outer = '/workspace/src/py_pubsub/py_pubsub/ims_outer_211004_cy_modified_wpt.csv'
+    csv_trackboundaries_pit_inner = '/workspace/src/py_pubsub/py_pubsub/ims_pit_inner_wpt.csv'
+    csv_trackboundaries_pit_outer = '/workspace/src/py_pubsub/py_pubsub/ims_pit_outer_wpt.csv'
+
+elif track == IMS:
+    csv_trackboundaries_inner = '/workspace/src/py_pubsub/py_pubsub/ims_inner_211004_cy_modified_wpt.csv'
+    csv_trackboundaries_outer = '/workspace/src/py_pubsub/py_pubsub/ims_outer_211004_cy_modified_wpt.csv'
+    csv_trackboundaries_pit_inner = '/workspace/src/py_pubsub/py_pubsub/ims_pit_inner_wpt.csv'
+    csv_trackboundaries_pit_outer = '/workspace/src/py_pubsub/py_pubsub/ims_pit_outer_wpt.csv'
+    track_x_bias = 1600 #IMS
+    track_y_bias = 320 #IMS
+
+    ax_x_lim = (-850,850)
+    ax_y_lim = (-850,850)
+
+elif track == IMS_SIM:
+    config_file = 'config_lgsim.yaml'
+
+elif track == LVMS:
+    csv_trackboundaries_inner = '/workspace/src/py_pubsub/assets/LVMS/trackboundary_left.csv'
+    csv_trackboundaries_outer = '/workspace/src/py_pubsub/assets/LVMS/trackboundary_right.csv'
+    csv_trackboundaries_pit_inner = '/workspace/src/py_pubsub/assets/LVMS/pit_trackboundary_left.csv'
+    csv_trackboundaries_pit_outer = '/workspace/src/py_pubsub/assets/LVMS/pit_trackboundary_right.csv'
+    track_x_bias = 0 #IMS
+    track_y_bias = 0 #IMS
+
+    ax_x_lim = (0,1000)
+    ax_y_lim = (0,-1000)
+
+elif track == LVMS_SIM:
+    config_file = 'config_lvms_sim.yaml'
+
+else:
+    raise RuntimeError("ERROR: invalid track provided: {}".format(track))
+
 class Visualiser(Node):
     def __init__(self):      
         self.range =np.pi/5
@@ -37,8 +109,8 @@ class Visualiser(Node):
         self.yaw=0
         self.x=0
         self.y=0
-        self.x_bias = 1600 #IMS
-        self.y_bias = 320 #IMS
+        self.x_bias = track_x_bias
+        self.y_bias = track_y_bias
         # self.x_bias = 0.0 # LOR
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw))
         self.ln1i, = self.ax1.plot([], [], 'r-')
@@ -52,7 +124,8 @@ class Visualiser(Node):
         self.ln2p, = self.ax2.plot([], [], 'b-')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'm-')
+        self.ln2u, = self.ax2.plot([], [], 'c-')
+        self.ln2oppo, = self.ax2.plot([], [], 'm-.')
         self.ln2m, = self.ax2.plot([], [], 'r*') #cyan
         self.ln2eo, = self.ax2.plot([], [], 'c-') 
         self.ln2eop, = self.ax2.plot([], [], 'c-')
@@ -64,6 +137,7 @@ class Visualiser(Node):
         self.x_pit_in_data, self.y_pit_in_data = [] , []
         self.x_pit_out_data, self.y_pit_out_data = [] , []
         self.x_path_data, self.y_path_data = [] , []
+        self.x_oppo_path_data, self.y_oppo_path_data = [] , []
         self.obs_x, self.obs_y = [] , []        
         self.plotEO_x, self.plotEO_y = [], []
         self.plotEOP_x, self.plotEOP_y = [], []
@@ -78,8 +152,7 @@ class Visualiser(Node):
         self.lateral_error = 0
         self.mission_code = 0
 
-        f = open('/workspace/src/py_pubsub/py_pubsub/ims_inner_211004_cy_modified_wpt.csv','r')
-        # f = open('/workspace/src/py_pubsub/py_pubsub/lor_inner_dense_211005_wpt.csv','r')
+        f = open(csv_trackboundaries_inner,'r')
         rdr = csv.reader(f)
         for line in rdr:
             if (self.cnt!=0):
@@ -88,8 +161,7 @@ class Visualiser(Node):
             self.cnt=1
         f.close()
         self.cnt=0
-        f = open('/workspace/src/py_pubsub/py_pubsub/ims_outer_211004_cy_modified_wpt.csv','r')
-        # f = open('/workspace/src/py_pubsub/py_pubsub/lor_outer_dense_211005_wpt.csv','r')
+        f = open(csv_trackboundaries_outer,'r')
         rdr = csv.reader(f)
         for line in rdr:
             if (self.cnt!=0):
@@ -99,8 +171,7 @@ class Visualiser(Node):
             self.cnt=1
         f.close()
         self.cnt=0
-        # f = open('/workspace/src/py_pubsub/py_pubsub/lor_pit_inner_wpt.csv','r')
-        f = open('/workspace/src/py_pubsub/py_pubsub/ims_pit_inner_wpt.csv','r')
+        f = open(csv_trackboundaries_pit_inner,'r')
         rdr = csv.reader(f)
         for line in rdr:
             if (self.cnt!=0):
@@ -109,8 +180,7 @@ class Visualiser(Node):
             self.cnt=1
         f.close()
         self.cnt=0
-        # f = open('/workspace/src/py_pubsub/py_pubsub/lor_pit_outer_wpt.csv','r')
-        f = open('/workspace/src/py_pubsub/py_pubsub/ims_pit_outer_wpt.csv','r')
+        f = open(csv_trackboundaries_pit_outer,'r')
         rdr = csv.reader(f)
         for line in rdr:
             if (self.cnt!=0):
@@ -119,22 +189,20 @@ class Visualiser(Node):
             self.cnt=1
         f.close()
         self.cnt=0        
+
     def plot_init1b(self):
-       
-        self.ax1.set_xlim(-850,850)
-        self.ax1.set_ylim(-850,850)
-        # self.ax1.set_xlim(-500,500)
-        # self.ax1.set_ylim(-500,100)        
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
         self.ax1.spines['left'].set_position('zero')
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
         #self.ax1.invert_xaxis()
-        return self.ln1b
+        return self.ln1b,
 
     def plot_init1i(self):
-        self.ax1.set_xlim(-850,850)
-        self.ax1.set_ylim(-850,850)
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
         # self.ax1.set_ylim(-250,50)                
         self.ax1.spines['left'].set_position('zero')
@@ -142,11 +210,11 @@ class Visualiser(Node):
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
         #self.ax1.invert_xaxis()
-        return self.ln1i
+        return self.ln1i,
 
     def plot_init1o(self):
-        self.ax1.set_xlim(-850,850)
-        self.ax1.set_ylim(-850,850)
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
         # self.ax1.set_ylim(-250,50)                
         self.ax1.spines['left'].set_position('zero')
@@ -154,10 +222,11 @@ class Visualiser(Node):
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
         #self.ax1.invert_xaxis()
-        return self.ln1o
+        return self.ln1o,
+
     def plot_init1y(self):
-        self.ax1.set_xlim(-850,850)
-        self.ax1.set_ylim(-850,850)
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
         # self.ax1.set_xlim(-250,250)
         # self.ax1.set_ylim(-250,50)                
         self.ax1.spines['left'].set_position('zero')
@@ -165,126 +234,125 @@ class Visualiser(Node):
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
         #self.ax1.invert_xaxis()
-        return self.ln1y
+        return self.ln1y,
+
     def plot_init1t(self):
-        self.ax1.set_xlim(-850,850)
-        self.ax1.set_ylim(-850,850)
-        # self.ax1.set_xlim(-250,250)
-        # self.ax1.set_ylim(-250,50)                
+        self.ax1.set_xlim(ax_x_lim)
+        self.ax1.set_ylim(ax_y_lim)
         self.ax1.spines['left'].set_position('zero')
         self.ax1.spines['right'].set_color('none')
         self.ax1.spines['bottom'].set_position('zero')
         self.ax1.spines['top'].set_color('none')
         #self.ax1.invert_xaxis()
-        return self.ln1t               
+        return self.ln1t,               
 
     def plot_init2b(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2b    
+        return self.ln2b,    
 
     def plot_init2i(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2i    
+        return self.ln2i ,   
 
     def plot_init2o(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2o    
+        return self.ln2o,    
 
     def plot_init2p(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2p
+        return self.ln2p,
+
     def plot_init2y(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2y   
+        return self.ln2y   ,
+
     def plot_init2t(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2t                       
+        return self.ln2t,
+
     def plot_init2u(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2u
+        return self.ln2u,
+
+    def plot_init2oppo(self):
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
+        self.ax2.spines['left'].set_position('zero')
+        self.ax2.spines['right'].set_color('none')
+        self.ax2.spines['bottom'].set_position('zero')
+        self.ax2.spines['top'].set_color('none')
+        #self.ax2.invert_xaxis()
+        return self.ln2oppo,
+
     def plot_init2m(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
-        # self.ax2.set_xlim(-300,300)
-        # self.ax2.set_ylim(-300,300)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
         #self.ax2.invert_xaxis()
-        return self.ln2m
+        return self.ln2m,
+
     def plot_init2eo(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        return self.ln2eo
+        return self.ln2eo,
+
     def plot_init2eop(self):
-        self.ax2.set_xlim(-850,850)
-        self.ax2.set_ylim(-850,850)
+        self.ax2.set_xlim(ax_x_lim)
+        self.ax2.set_ylim(ax_y_lim)
         self.ax2.spines['left'].set_position('zero')
         self.ax2.spines['right'].set_color('none')
         self.ax2.spines['bottom'].set_position('zero')
         self.ax2.spines['top'].set_color('none')
-        return self.ln2eop
+        return self.ln2eop,
 
     def getYaw(self, pose):
         quaternion = (pose.orientation.x, pose.orientation.y, pose.orientation.z,
@@ -292,7 +360,7 @@ class Visualiser(Node):
         euler = tf_transformations.euler_from_quaternion(quaternion)
         yaw = euler[2]
         return yaw
-                    
+
     def path_callback(self, msg):
         # print("path_callback")
         self.x_path_data=[]
@@ -300,6 +368,15 @@ class Visualiser(Node):
         for i in range(np.size(msg.poses)):
             self.x_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
             self.y_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
+
+    def oppo_prediction_path_callback(self, msg):
+        # print("path_callback")
+        self.x_oppo_path_data=[]
+        self.y_oppo_path_data=[]
+        for i in range(np.size(msg.poses)):
+            self.x_oppo_path_data.append(msg.poses[i].pose.position.x + self.x_bias)
+            self.y_oppo_path_data.append(msg.poses[i].pose.position.y + self.y_bias)
+
 
     def tele_callback(self, msg):
         # print("tele_callback")
@@ -311,7 +388,7 @@ class Visualiser(Node):
             self.radius = self.max
         else:
             self.radius = self.wheelbase / np.tan(self.steering)
-       
+
         for i in np.arange(0,self.range,self.incre):
             if (self.radius==self.max):
                 self.x_pred=i*20
@@ -337,12 +414,10 @@ class Visualiser(Node):
         self.x_data, self.y_data = [] , []
         self.y_data.append(self.y)
         self.x_data.append(self.x)
-        # print("position")
-        # print(self.x)
-        # print(self.y)
 
         self.plotEO_x, self.plotEO_y = [], []
         min_dist_O = 99999
+
         for idx in range(self.out_cout):
             dist = ((self.x - self.x_out_data[idx])**2 + (self.y - self.y_out_data[idx])**2)**0.5
             if dist < min_dist_O :
@@ -352,34 +427,27 @@ class Visualiser(Node):
             self.CO_idx_n = self.CO_idx + 1
         else:
             self.CO_idx_n = 0
+
         m = (self.y_out_data[self.CO_idx_n] - self.y_out_data[self.CO_idx]) / (self.x_out_data[self.CO_idx_n] - self.x_out_data[self.CO_idx])
         d = (-1)*m*self.x_out_data[self.CO_idx]+self.y_out_data[self.CO_idx]
         self.error_O = abs(m*self.x-self.y+d) / (m**2+1)**0.5
         self.plotEO_x.append(self.x_out_data[self.CO_idx])
-        # self.plotEO_x.append(self.x_out_data[self.CO_idx]+5)
         self.plotEO_x.append(self.x_out_data[self.CO_idx_n])
         self.plotEO_y.append(self.y_out_data[self.CO_idx])
-        # self.plotEO_y.append(m*(self.x_out_data[self.CO_idx]+5)+d)
         self.plotEO_y.append(self.y_out_data[self.CO_idx_n])
-        # print("data")
-        # print(self.CO_idx)
-        # print(self.plotEO_x)
-        # print(self.plotEO_y)
         m2 = (-1)/m
         d2 = (-1)*m2*self.x+self.y
         self.px = (d-d2)/(m2-m)
         self.py = m*self.px + d
         self.plotEOP_x, self.plotEOP_y = [], []
         self.plotEOP_x.append(self.x)
-        # self.plotEOP_x.append(self.x+5)
         self.plotEOP_x.append(self.px)
         self.plotEOP_y.append(self.y)
-        # self.plotEOP_y.append(m2*(self.x+5)+d2)
         self.plotEOP_y.append(self.py)
-        # print(round(self.error_O,4))
-        # print(round(((self.x-self.px)**2+(self.y-self.py)**2)**0.5,4))
+
         #SPEED_Desired
         self.desired_speed = round(msg.control.desired_velocity_mps,3)
+
         #SPEED
         self.speed = round(msg.kinematic.wheel_speed_mps,3)
 
@@ -412,27 +480,25 @@ class Visualiser(Node):
 
     def update_plot1b(self, frame):
         self.ln1b.remove()
-        # self.ax1.clear()
-        # self.ax1.axis('off')
-        # self.ax1.axis('scaled')          
+
         self.ln1b, = self.ax1.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=20, color='blue')
               
         self.ln1b.set_data(self.x_data, self.y_data)
-        return self.ln1b
+        return self.ln1b,
 
     def update_plot1i(self, frame):
         self.ln1i.set_data(self.x_in_data, self.y_in_data)
-        return self.ln1i
+        return self.ln1i,
 
     def update_plot1o(self, frame):
         self.ln1o.set_data(self.x_out_data, self.y_out_data)
-        return self.ln1o
+        return self.ln1o,
     def update_plot1y(self, frame):
         self.ln1y.set_data(self.x_pit_in_data, self.y_pit_in_data)
-        return self.ln1y
+        return self.ln1y,
     def update_plot1t(self, frame):
         self.ln1t.set_data(self.x_pit_out_data, self.y_pit_out_data)
-        return self.ln1t        
+        return self.ln1t,        
         
     def update_plot2b(self, frame):
         self.ln2b.remove()
@@ -445,7 +511,8 @@ class Visualiser(Node):
         self.ln2b, = self.ax2.plot([], [], marker=(3, 0, self.yaw*180/3.1415-90), markersize=12, color='blue')
         self.ln2y, = self.ax2.plot([], [], 'k-')
         self.ln2t, = self.ax2.plot([], [], 'k-')
-        self.ln2u, = self.ax2.plot([], [], 'm-')
+        self.ln2u, = self.ax2.plot([], [], 'c-')
+        self.ln2oppo, = self.ax2.plot([], [], 'm-.')
         self.ln2m, = self.ax2.plot([], [], 'rs', markersize=10)
         self.ln2eo, = self.ax2.plot([], [], marker=(100, 0, self.yaw*180/3.1415-90), markersize=8, color='purple', linewidth=2)
         self.ln2eop, = self.ax2.plot([], [], 'c-', linewidth=3)
@@ -496,7 +563,7 @@ class Visualiser(Node):
         else:
             self.ax2.text(0.6, 1.0, r'Outlane Dist Error  [m]:{}'.format(round(np.abs(self.wall_dist_sensing-self.error_O),2)), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
            
-        legned = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
+        legend = self.ax1.legend([self.ln2i,self.ln2o,self.ln2y,self.ln2p,self.ln2u,self.ln2oppo,self.ln2m], ['Inner lane','Outer lane','Pit lane','Pediction path','Waypoint','Prediction Path','Obstacle'],bbox_to_anchor=(1.0, 0.8), ncol=2, fontsize = 10, frameon=False)
         self.fig.patch.set_alpha(0.5)
 
         Mission_status = 'EMPTY'
@@ -533,61 +600,61 @@ class Visualiser(Node):
         else:
             Mission_status = 'UNKNOWN'
 
-        self.ax2.text(0, 1.23, r'Mission Status:', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')        
-        self.ax2.text(0, 1.2, r'{} ({})'.format(Mission_status, self.mission_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black') 
+        self.ax2.text(0, 1.23, r'Mission Status:', transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
+        self.ax2.text(0, 1.2, r'{} ({})'.format(Mission_status, self.mission_code), transform=self.ax2.transAxes, horizontalalignment='left', size=18, color='black')
  
-        # print("update")
-        # print(self.plotEO_x)
-        # print(self.plotEO_y)
-        return self.ln2b
+        return self.ln2i, self.ln2o, self.ln2p, self.ln2b, self.ln2y, self.ln2t, self.ln2u, self.ln2oppo, self.ln2m, self.ln2eo, self.ln2eop,
 
     def update_plot2i(self, frame):
         self.ln2i.set_data(self.x_in_data, self.y_in_data)
-        return self.ln2i
+        return self.ln2i,
 
     def update_plot2o(self, frame):
         self.ln2o.set_data(self.x_out_data, self.y_out_data)
-        return self.ln2o
+        return self.ln2o,
 
     def update_plot2p(self, frame):
         self.ln2p.set_data(self.x_pred_data, self.y_pred_data)
-        return self.ln2p
+        return self.ln2p,
     def update_plot2y(self, frame):
         self.ln2y.set_data(self.x_pit_in_data, self.y_pit_in_data)
-        return self.ln2y
+        return self.ln2y,
     def update_plot2t(self, frame):
         self.ln2t.set_data(self.x_pit_out_data, self.y_pit_out_data)
         return self.ln2t
     def update_plot2u(self, frame):
         self.ln2u.set_data(self.x_path_data, self.y_path_data)
-        return self.ln2u
+        return self.ln2u,
+    def update_plot2oppo(self, frame):
+        self.ln2oppo.set_data(self.x_oppo_path_data, self.y_oppo_path_data)
+        return self.ln2oppo,
     def update_plot2m(self, frame):
         self.ln2m.set_data(self.obs_x, self.obs_y)
-        return self.ln2m
+        return self.ln2m,
     def update_plot2eo(self, frame):
         self.ln2eo.set_data(self.plotEO_x, self.plotEO_y)
-        return self.ln2eo
+        return self.ln2eo,
     def update_plot2eop(self, frame):
         self.ln2eop.set_data(self.plotEOP_x, self.plotEOP_y)
-        return self.ln2eop                             
+        return self.ln2eop,                             
 fig, (ax1, ax2) = plt.subplots(2,1,gridspec_kw={'height_ratios': [1, 3]})
 
 vis = Visualiser()
-ani1b = FuncAnimation(vis.fig, vis.update_plot1b, init_func=vis.plot_init1b)
-ani1i = FuncAnimation(vis.fig, vis.update_plot1i, init_func=vis.plot_init1i)
-ani1o = FuncAnimation(vis.fig, vis.update_plot1o, init_func=vis.plot_init1o)
-ani1y = FuncAnimation(vis.fig, vis.update_plot1y, init_func=vis.plot_init1y)
-ani1t = FuncAnimation(vis.fig, vis.update_plot1t, init_func=vis.plot_init1t)
-ani2b = FuncAnimation(vis.fig, vis.update_plot2b, init_func=vis.plot_init2b)
-ani2i = FuncAnimation(vis.fig, vis.update_plot2i, init_func=vis.plot_init2i)
-ani2o = FuncAnimation(vis.fig, vis.update_plot2o, init_func=vis.plot_init2o)
-ani2p = FuncAnimation(vis.fig, vis.update_plot2p, init_func=vis.plot_init2p)
-ani2y = FuncAnimation(vis.fig, vis.update_plot2y, init_func=vis.plot_init2y)
-ani2t = FuncAnimation(vis.fig, vis.update_plot2t, init_func=vis.plot_init2t)
-ani2u = FuncAnimation(vis.fig, vis.update_plot2u, init_func=vis.plot_init2u)
-ani2m = FuncAnimation(vis.fig, vis.update_plot2m, init_func=vis.plot_init2m)
-ani2eo = FuncAnimation(vis.fig, vis.update_plot2eo, init_func=vis.plot_init2eo)
-# ani2eop = FuncAnimation(vis.fig, vis.update_plot2eop, init_func=vis.plot_init2eop)
+ani1b = FuncAnimation(vis.fig, vis.update_plot1b, init_func=vis.plot_init1b, interval=100, blit=True)
+ani1i = FuncAnimation(vis.fig, vis.update_plot1i, init_func=vis.plot_init1i, interval=100, blit=True)
+ani1o = FuncAnimation(vis.fig, vis.update_plot1o, init_func=vis.plot_init1o, interval=100, blit=True)
+ani1y = FuncAnimation(vis.fig, vis.update_plot1y, init_func=vis.plot_init1y, interval=100, blit=True)
+ani1t = FuncAnimation(vis.fig, vis.update_plot1t, init_func=vis.plot_init1t, interval=100, blit=True)
+ani2b = FuncAnimation(vis.fig, vis.update_plot2b, init_func=vis.plot_init2b, interval=100, blit=True)
+ani2i = FuncAnimation(vis.fig, vis.update_plot2i, init_func=vis.plot_init2i, interval=100, blit=True)
+ani2o = FuncAnimation(vis.fig, vis.update_plot2o, init_func=vis.plot_init2o, interval=100, blit=True)
+ani2p = FuncAnimation(vis.fig, vis.update_plot2p, init_func=vis.plot_init2p, interval=100, blit=True)
+ani2y = FuncAnimation(vis.fig, vis.update_plot2y, init_func=vis.plot_init2y, interval=100, blit=True)
+ani2t = FuncAnimation(vis.fig, vis.update_plot2t, init_func=vis.plot_init2t, interval=100, blit=True)
+ani2u = FuncAnimation(vis.fig, vis.update_plot2u, init_func=vis.plot_init2u, interval=100, blit=True)
+ani2oppo = FuncAnimation(vis.fig, vis.update_plot2oppo, init_func=vis.plot_init2oppo, interval=100, blit=True)
+ani2m = FuncAnimation(vis.fig, vis.update_plot2m, init_func=vis.plot_init2m, interval=100, blit=True)
+ani2eo = FuncAnimation(vis.fig, vis.update_plot2eo, init_func=vis.plot_init2eo, interval=100, blit=True)
 
 vis.ax1.axis('scaled')
 vis.ax2.axis('scaled')
@@ -601,9 +668,9 @@ def main(args=None):
     node = rclpy.create_node('Visualiser')
     sub_odom = node.create_subscription(Telemetry, '/nif_telemetry/telemetry', vis.tele_callback, qos_profile_sensor_data)
     sub_path = node.create_subscription(Path, '/nif_telemetry/path_global', vis.path_callback, qos_profile_sensor_data)
+    sub_oppo_prediction = node.create_subscription(Path, '/nif_telemetry/oppo_prediction', vis.oppo_prediction_path_callback, qos_profile_sensor_data)
     sub_marker = node.create_subscription(MarkerArray, '/nif_telemetry/perception_result', vis.marker_callback, qos_profile_sensor_data)
-    sub_system = node.create_subscription(SystemStatus, '/system/status', vis.system_callback, qos_profile_sensor_data)
-    # sub_path = node.create_subscription(Path, '/planning/graph/path_global', vis.path_callback, qos_profile_sensor_data)
+    sub_system = node.create_subscription(SystemStatus, '/nif_telemetry/system_status', vis.system_callback, qos_profile_sensor_data)
 
     rclpy.spin(node)
 

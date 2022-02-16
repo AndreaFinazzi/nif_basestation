@@ -37,3 +37,5 @@ uint16 mission_status_code 65535
 
 # Maximum allowed linear velocity in meter per seconds
 float64 max_velocity_mps 0.0
+
+ZoneStatus zone_status
